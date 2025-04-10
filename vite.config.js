@@ -8,7 +8,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      '@shadcn/ui': 'node_modules/@shadcn/ui/dist/index.esm.js',
+      "@shadcn/ui": "node_modules/@shadcn/ui/dist/index.esm.js",
     },
+  },
+  build: {
+    outDir: 'dist', // 👈 Ensure this is present for Vercel
   },
 })
