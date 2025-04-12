@@ -6,11 +6,12 @@ import { Link, useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
 import { projectAction } from "@/store/main";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, HelpCircle } from "lucide-react";
 import { FaChevronRight } from "react-icons/fa";
 
 export default function Project() {
   const [soc, setSoc] = useState(null);
+  const [showHelp, setShowHelp] = useState(false);
   const [terminalHeight, setTerminalHeight] = useState('350px');
   const [isSidebarHidden, setIsSidebarHidden] = useState(false);
   const [templateName, setTemplateName] = useState("");
@@ -121,6 +122,7 @@ export default function Project() {
                 TERMINUS
               </span>
             </Link>
+            <div className="flex items-center gap-3">
             <Link 
               to="/" 
               className="group flex items-center gap-2 px-4 py-2 rounded-lg
@@ -133,6 +135,28 @@ export default function Project() {
                            group-hover:-translate-x-1" />
               <span className="text-sm font-medium">Back to Dashboard</span>
             </Link>
+            <div className="relative">
+              <button
+                onMouseEnter={() => setShowHelp(true)}
+                onMouseLeave={() => setShowHelp(false)}
+                className="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-gray-200 transition-colors"
+              >
+                <HelpCircle className="w-5 h-5" />
+              </button>
+              {showHelp && (
+                <div className="absolute right-0 top-full mt-2 w-72 p-4 rounded-lg bg-gray-800 border border-gray-700 shadow-xl z-50">
+                  <h4 className="text-sm font-medium text-gray-200 mb-2">File & Folder Creation Help</h4>
+                  <div className="space-y-2 text-xs text-gray-400">
+                    <p><strong>Creating files in folders:</strong></p>
+                    <p>To create a file inside a folder, use the format:</p>
+                    <code className="block bg-gray-900 p-2 rounded mt-1 text-gray-300">folder_name/file_name</code>
+                    <p><strong>Example:</strong> src/index.js</p>
+                    <p className="mt-2"><strong>Note:</strong> The same format applies when creating new folders.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
           </div>
           <div
             className="h-[calc(100vh-3.5rem)] w-full flex relative"
