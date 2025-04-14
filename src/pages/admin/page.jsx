@@ -24,6 +24,9 @@ const AdminPage = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeRole, setActiveRole] = useState('user');
+  const [loginFilter, setLoginFilter] = useState('all'); // 'all', 'active', 'inactive'
+  const [containerFilter, setContainerFilter] = useState('all'); // 'all', 'with', 'without'
+  const [billFilter, setBillFilter] = useState('all'); // 'all', 'paid', 'unpaid'
   const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -154,7 +157,25 @@ const AdminPage = () => {
           containers: containersWithStatus.filter(container => container.email === user.email),
           isLoggedIn: authData.some(auth => auth.email === user.email && auth.noOfLogins > 0),
         }));
-        setUsers(combinedData);
+
+        // Apply filters
+        const filteredData = combinedData.filter(user => {
+          const matchesLogin = loginFilter === 'all' ||
+            (loginFilter === 'active' && user.isLoggedIn) ||
+            (loginFilter === 'inactive' && !user.isLoggedIn);
+
+          const matchesContainer = containerFilter === 'all' ||
+            (containerFilter === 'with' && user.containers.length > 0) ||
+            (containerFilter === 'without' && user.containers.length === 0);
+
+          const matchesBill = billFilter === 'all' ||
+            (billFilter === 'paid' && (user.billingInfo?.amount || 0) > 0) ||
+            (billFilter === 'unpaid' && (user.billingInfo?.amount || 0) === 0);
+
+          return matchesLogin && matchesContainer && matchesBill;
+        });
+
+        setUsers(filteredData);
       } catch (error) {
         console.error("Error fetching data:", error);
         setError("An error occurred while fetching data");
@@ -162,7 +183,7 @@ const AdminPage = () => {
     };
 
     fetchData();
-  }, [token, refreshTrigger]);
+  }, [token, refreshTrigger, loginFilter, containerFilter, billFilter]);
 
 
   const fetchUsers = async () => {
@@ -851,15 +872,81 @@ const AdminPage = () => {
                 Manage users and their associated containers
               </p>
             </div>
-            <button
-              onClick={toggleRole}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 
-                       bg-white border border-gray-200 rounded-lg hover:bg-gray-50 
-                       transition-all duration-200 shadow-sm"
-            >
-              <span>View {activeRole === 'user' ? 'Developers' : 'Users'}</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-3">
+              {/* Filters */}
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <select
+                    value={loginFilter}
+                    onChange={(e) => setLoginFilter(e.target.value)}
+                    className="pl-9 pr-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 
+                             rounded-lg hover:bg-gray-50 appearance-none cursor-pointer min-w-[160px]
+                             focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="all" className="py-1">👥 All Users</option>
+                    <option value="active" className="py-1">🟢 Active Users</option>
+                    <option value="inactive" className="py-1">⭕ Inactive Users</option>
+                  </select>
+                  <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <User className="h-4 w-4 text-gray-500" />
+                  </div>
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <ArrowRight className="h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <select
+                    value={containerFilter}
+                    onChange={(e) => setContainerFilter(e.target.value)}
+                    className="pl-9 pr-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 
+                             rounded-lg hover:bg-gray-50 appearance-none cursor-pointer min-w-[160px]
+                             focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="all" className="py-1">📦 All Containers</option>
+                    <option value="with" className="py-1">✅ Has Containers</option>
+                    <option value="without" className="py-1">❌ No Containers</option>
+                  </select>
+                  <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <Box className="h-4 w-4 text-gray-500" />
+                  </div>
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <ArrowRight className="h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <select
+                    value={billFilter}
+                    onChange={(e) => setBillFilter(e.target.value)}
+                    className="pl-9 pr-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 
+                             rounded-lg hover:bg-gray-50 appearance-none cursor-pointer min-w-[160px]
+                             focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="all" className="py-1">💰 All Bills</option>
+                    <option value="paid" className="py-1">💵 Has Bills</option>
+                    <option value="unpaid" className="py-1">🚫 No Bills</option>
+                  </select>
+                  <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <Activity className="h-4 w-4 text-gray-500" />
+                  </div>
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <ArrowRight className="h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Role Toggle Button */}
+              <button
+                onClick={toggleRole}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 
+                         bg-white border border-gray-200 rounded-lg hover:bg-gray-50
+                         focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              >
+                <span>View {activeRole === 'user' ? 'Developers' : 'Users'}</span>
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -933,7 +1020,7 @@ const StatCard = ({ title, value, icon, description, trend, trendUp, color = "te
 
 // Reusable UserTable component
 const UserTable = ({ setPopupVisible, popupMessage, popupType, popupVisible, users, toggleShowContainers, expandedUserIds, onStopContainer, onStartContainer, onDeleteContainer, onLogoutUser, onChangeRole, activeRole, onAssignTemplate }) => (
-  <table className="w-full border-collapse">
+  <table className="w-full border-collapse [&_td]:px-6 [&_td]:py-4 [&_th]:px-6 [&_th]:py-4">
     <thead>
       <tr className="bg-gray-50/80 border-b border-gray-200">
         <TableHeader title="User" />
@@ -1041,10 +1128,13 @@ const UserTable = ({ setPopupVisible, popupMessage, popupType, popupVisible, use
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onLogoutUser(user.email)}
-                  className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium
-                           text-red-700 bg-red-50 rounded-md hover:bg-red-100 
-                           transition-colors duration-200"
-                  title="Logout User"
+                  disabled={!user.isLoggedIn}
+                  className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium
+                           rounded-md transition-colors duration-200
+                           ${user.isLoggedIn 
+                             ? 'text-red-700 bg-red-50 hover:bg-red-100' 
+                             : 'text-gray-400 bg-gray-50 cursor-not-allowed'}`}
+                  title={user.isLoggedIn ? 'Logout User' : 'User not logged in'}
                 >
                   <LogOut className="h-3.5 w-3.5" />
                   Logout
@@ -1136,8 +1226,7 @@ const StatusBadge = ({ status }) => (
   <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium
     ${status 
       ? 'bg-green-50 text-green-700 ring-1 ring-green-600/20' 
-      : 'bg-gray-50 text-gray-600 ring-1 ring-gray-500/10'}`}
-  >
+      : 'bg-gray-50 text-gray-600 ring-1 ring-gray-500/10'}`}>
     <span className={`h-1.5 w-1.5 rounded-full ${
       status ? 'bg-green-600 animate-pulse' : 'bg-gray-500'
     }`} />
@@ -1306,8 +1395,7 @@ const ContainerRow = ({ setPopupVisible, popupMessage, popupType, popupVisible, 
       <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium 
         ${container.status === 'running' 
           ? 'bg-green-100 text-green-700 ring-1 ring-green-600/20' 
-          : 'bg-red-100 text-red-700 ring-1 ring-red-600/20'}`}
-      >
+          : 'bg-red-100 text-red-700 ring-1 ring-red-600/20'}`}>
         <span className={`h-1.5 w-1.5 rounded-full ${
           container.status === 'running' ? 'bg-green-600 animate-pulse' : 'bg-red-600'
         }`} />
