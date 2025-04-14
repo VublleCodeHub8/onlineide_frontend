@@ -35,7 +35,39 @@ const AdminPage = () => {
     isLoading: false,
     message: ''
   });
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
 
+  // Enhanced loading spinner component with size variants and smooth transitions
+  const LoadingSpinner = ({ size = 'default', className = '' }) => {
+    const sizeClasses = {
+      small: 'h-4 w-4',
+      default: 'h-6 w-6',
+      large: 'h-8 w-8'
+    };
+
+    return (
+      <div className={`flex items-center justify-center transition-all duration-300 ${className}`}>
+        <svg 
+          className={`animate-spin ${sizeClasses[size]} text-blue-500 transition-colors duration-300`} 
+          viewBox="0 0 24 24"
+        >
+          <circle 
+            className="opacity-25" 
+            cx="12" 
+            cy="12" 
+            r="10" 
+            stroke="currentColor" 
+            strokeWidth="4"
+          />
+          <path 
+            className="opacity-75" 
+            fill="currentColor" 
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          />
+        </svg>
+      </div>
+    );
+  };
 
   const fetchTemplates = async () => {
     try {
@@ -143,6 +175,7 @@ const AdminPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsFilterLoading(true);
         const [usersData, containersData, authData] = await Promise.all([
           fetchUsers(),
           fetchContainers(),
@@ -179,6 +212,8 @@ const AdminPage = () => {
       } catch (error) {
         console.error("Error fetching data:", error);
         setError("An error occurred while fetching data");
+      } finally {
+        setIsFilterLoading(false);
       }
     };
 
@@ -873,65 +908,92 @@ const AdminPage = () => {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              {/* Filters */}
+              {/* Filters with enhanced transitions */}
               <div className="flex items-center gap-2">
-                <div className="relative">
+                <div className="relative group">
                   <select
                     value={loginFilter}
                     onChange={(e) => setLoginFilter(e.target.value)}
-                    className="pl-9 pr-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 
+                    disabled={isFilterLoading}
+                    className={`pl-9 pr-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 
                              rounded-lg hover:bg-gray-50 appearance-none cursor-pointer min-w-[160px]
-                             focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                             focus:outline-none focus:ring-2 focus:ring-blue-500/20 
+                             transition-all duration-300 ease-in-out
+                             ${isFilterLoading 
+                               ? 'opacity-50 cursor-wait bg-gray-50 shadow-inner' 
+                               : 'hover:border-blue-200 hover:shadow-sm'}`}
                   >
                     <option value="all" className="py-1">👥 All Users</option>
                     <option value="active" className="py-1">🟢 Active Users</option>
                     <option value="inactive" className="py-1">⭕ Inactive Users</option>
                   </select>
-                  <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <User className="h-4 w-4 text-gray-500" />
+                  <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none transition-transform duration-300 group-hover:scale-110">
+                    {isFilterLoading ? (
+                      <LoadingSpinner size="small" className="text-blue-500" />
+                    ) : (
+                      <User className="h-4 w-4 text-gray-500 transition-colors duration-300 group-hover:text-blue-500" />
+                    )}
                   </div>
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <ArrowRight className="h-4 w-4 text-gray-400" />
+                    <ArrowRight className={`h-4 w-4 transition-colors duration-300 ${isFilterLoading ? 'text-gray-300' : 'text-gray-400 group-hover:text-blue-500'}`} />
                   </div>
                 </div>
 
-                <div className="relative">
+                <div className="relative group">
                   <select
                     value={containerFilter}
                     onChange={(e) => setContainerFilter(e.target.value)}
-                    className="pl-9 pr-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 
+                    disabled={isFilterLoading}
+                    className={`pl-9 pr-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 
                              rounded-lg hover:bg-gray-50 appearance-none cursor-pointer min-w-[160px]
-                             focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                             focus:outline-none focus:ring-2 focus:ring-blue-500/20 
+                             transition-all duration-300 ease-in-out
+                             ${isFilterLoading 
+                               ? 'opacity-50 cursor-wait bg-gray-50 shadow-inner' 
+                               : 'hover:border-blue-200 hover:shadow-sm'}`}
                   >
                     <option value="all" className="py-1">📦 All Containers</option>
                     <option value="with" className="py-1">✅ Has Containers</option>
                     <option value="without" className="py-1">❌ No Containers</option>
                   </select>
-                  <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <Box className="h-4 w-4 text-gray-500" />
+                  <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none transition-transform duration-300 group-hover:scale-110">
+                    {isFilterLoading ? (
+                      <LoadingSpinner size="small" className="text-blue-500" />
+                    ) : (
+                      <Box className="h-4 w-4 text-gray-500 transition-colors duration-300 group-hover:text-blue-500" />
+                    )}
                   </div>
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <ArrowRight className="h-4 w-4 text-gray-400" />
+                    <ArrowRight className={`h-4 w-4 transition-colors duration-300 ${isFilterLoading ? 'text-gray-300' : 'text-gray-400 group-hover:text-blue-500'}`} />
                   </div>
                 </div>
 
-                <div className="relative">
+                <div className="relative group">
                   <select
                     value={billFilter}
                     onChange={(e) => setBillFilter(e.target.value)}
-                    className="pl-9 pr-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 
+                    disabled={isFilterLoading}
+                    className={`pl-9 pr-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 
                              rounded-lg hover:bg-gray-50 appearance-none cursor-pointer min-w-[160px]
-                             focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                             focus:outline-none focus:ring-2 focus:ring-blue-500/20 
+                             transition-all duration-300 ease-in-out
+                             ${isFilterLoading 
+                               ? 'opacity-50 cursor-wait bg-gray-50 shadow-inner' 
+                               : 'hover:border-blue-200 hover:shadow-sm'}`}
                   >
                     <option value="all" className="py-1">💰 All Bills</option>
                     <option value="paid" className="py-1">💵 Has Bills</option>
                     <option value="unpaid" className="py-1">🚫 No Bills</option>
                   </select>
-                  <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <Activity className="h-4 w-4 text-gray-500" />
+                  <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none transition-transform duration-300 group-hover:scale-110">
+                    {isFilterLoading ? (
+                      <LoadingSpinner size="small" className="text-blue-500" />
+                    ) : (
+                      <Activity className="h-4 w-4 text-gray-500 transition-colors duration-300 group-hover:text-blue-500" />
+                    )}
                   </div>
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <ArrowRight className="h-4 w-4 text-gray-400" />
+                    <ArrowRight className={`h-4 w-4 transition-colors duration-300 ${isFilterLoading ? 'text-gray-300' : 'text-gray-400 group-hover:text-blue-500'}`} />
                   </div>
                 </div>
               </div>
@@ -951,26 +1013,40 @@ const AdminPage = () => {
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <UserTable
-              setPopupVisible={setPopupVisible}
-              popupMessage={popupMessage}
-              popupType={popupType}
-              popupVisible={popupVisible}
-              users={filteredUsers}
-              toggleShowContainers={toggleShowContainers}
-              expandedUserIds={expandedUserIds}
-              onStopContainer={handleStopContainer}
-              onStartContainer={handleStartContainer}
-              onDeleteContainer={handleDeleteContainer}
-              onLogoutUser={logoutUser}
-              onChangeRole={changeRole}
-              activeRole={activeRole}
-              onAssignTemplate={(user) => {
-                setSelectedUser(user);
-                setShowTemplateModal(true);
-              }}
-              className="w-full border-collapse [&_td]:px-6 [&_td]:py-4 [&_th]:px-6 [&_th]:py-4"
-            />
+            {isFilterLoading ? (
+              <div className="flex flex-col items-center justify-center p-12 space-y-4">
+                <div className="relative">
+                  <LoadingSpinner size="large" className="text-blue-500" />
+                  <div className="absolute inset-0 animate-ping opacity-75">
+                    <LoadingSpinner size="large" className="text-blue-500/20" />
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500 animate-pulse">
+                  Filtering results...
+                </p>
+              </div>
+            ) : (
+              <UserTable
+                setPopupVisible={setPopupVisible}
+                popupMessage={popupMessage}
+                popupType={popupType}
+                popupVisible={popupVisible}
+                users={filteredUsers}
+                toggleShowContainers={toggleShowContainers}
+                expandedUserIds={expandedUserIds}
+                onStopContainer={handleStopContainer}
+                onStartContainer={handleStartContainer}
+                onDeleteContainer={handleDeleteContainer}
+                onLogoutUser={logoutUser}
+                onChangeRole={changeRole}
+                activeRole={activeRole}
+                onAssignTemplate={(user) => {
+                  setSelectedUser(user);
+                  setShowTemplateModal(true);
+                }}
+                className="w-full border-collapse [&_td]:px-6 [&_td]:py-4 [&_th]:px-6 [&_th]:py-4"
+              />
+            )}
           </div>
         </CardContent>
       </Card>
