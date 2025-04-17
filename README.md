@@ -1,19 +1,13 @@
-<h1 align="center">
-  <span style="color:#2563eb; font-weight:bold;">Terminus</span> <span style="color:#111827; font-weight:normal;">– Cloud IDE & Container Management Platform</span>
-</h1>
-
 <p align="center">
-  <a href="#"><img src="https://img.shields.io/badge/build-passing-brightgreen" alt="Build Status"/></a>
-  <a href="#"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"/></a>
-  <a href="#"><img src="https://img.shields.io/badge/contributions-welcome-orange" alt="Contributions Welcome"/></a>
-  <a href="#"><img src="https://img.shields.io/badge/react-18.3.1-blue" alt="React Version"/></a>
+  <img src="https://img.shields.io/badge/-%F0%9F%9A%80%20TERMINAS%20IDE-000000?style=for-the-badge&logoColor=white" alt="Terminas Banner" />
 </p>
 
-<hr style="border:1px solid #2563eb; width:70%; margin:24px auto;"/>
+<h1 align="center">🌐 Online IDE (Terminas)</h1>
 
-<blockquote style="font-size:1.15em; color:#2563eb; border-left:4px solid #2563eb; padding-left:1em; background:#f8fafc;">
-  <b>Terminus</b> is a modern cloud-based platform for managing containers and coding online, designed for developers and organizations seeking a seamless, secure, and collaborative development experience. Built with <b>React</b>, <b>Vite</b>, <b>Tailwind CSS</b>, <b>Chakra UI</b>, <b>MUI</b>, and <b>Redux</b>, it offers an intuitive interface, real-time collaboration, and powerful analytics for containerized applications.
-</blockquote>
+<p align="center">
+  <em>The next generation cloud development environment</em>
+</p>
+
 
 <hr style="border:1px solid #e5e7eb; width:80%; margin:24px auto;"/>
 
