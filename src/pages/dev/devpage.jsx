@@ -52,8 +52,7 @@ const DevPage = () => {
 
   const fetchTemplate = async () => {
     try {
-      const currRole = token.role;
-      const endpoint = currRole === 'admin' ? `${import.meta.env.VITE_API_URL}/dev/getAllTemplates` : `${import.meta.env.VITE_API_URL}/dev/getUserTemplates/${token.email}`;
+      const endpoint = `${import.meta.env.VITE_API_URL}/dev/getUserTemplates/${token.email}`;
       const response = await fetch(endpoint, {
         method: "GET",
         headers: {
