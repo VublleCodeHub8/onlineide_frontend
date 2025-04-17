@@ -255,30 +255,87 @@ const AdminPage = () => {
   };
 
   const addContainerDetails = async (containersData) => {
-    return Promise.all(
-      containersData.map(async (container) => {
-        try {
-          const response = await fetch(`${import.meta.env.VITE_API_URL}/container/details/${container.id}`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token.token}`,
-            },
-          });
-          const details = await response.json();
-          return {
-            ...container,
-            status: details.status,
-            cpu: details.cpuUsagePercentage,
-            memory: details.memoryUsagePercentage,
-
-          };
-        } catch (error) {
-          console.error(`Error fetching data for container ${container.id}:`, error);
-          return container;
+    // First return containers with placeholder values to render the UI faster
+    const containersWithPlaceholders = containersData.map(container => ({
+      ...container,
+      status: 'pending',
+      cpu: 0,
+      memory: 0
+    }));
+    
+    // In the background, update the container details in batches
+    // This won't block the UI rendering
+    setTimeout(() => {
+      processBatches(containersData, 5);
+    }, 0);
+    
+    return containersWithPlaceholders;
+  };
+  
+  // Process container details in batches to reduce network congestion
+  const processBatches = async (containersData, batchSize) => {
+    const batches = [];
+    for (let i = 0; i < containersData.length; i += batchSize) {
+      batches.push(containersData.slice(i, i + batchSize));
+    }
+    
+    const processedContainers = [];
+    
+    for (const batch of batches) {
+      const batchResults = await Promise.all(
+        batch.map(async (container) => {
+          try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/container/details/${container.id}`, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token.token}`,
+              },
+            });
+            const details = await response.json();
+            return {
+              ...container,
+              status: details.status,
+              cpu: details.cpuUsagePercentage,
+              memory: details.memoryUsagePercentage,
+            };
+          } catch (error) {
+            console.error(`Error fetching data for container ${container.id}:`, error);
+            return container;
+          }
+        })
+      );
+      
+      processedContainers.push(...batchResults);
+      
+      // Update the containers state with the latest processed batch
+      // This will trigger incremental UI updates as batches complete
+      setContainers(current => {
+        const updated = [...current];
+        for (const processedContainer of batchResults) {
+          const index = updated.findIndex(c => c.id === processedContainer.id);
+          if (index !== -1) {
+            updated[index] = processedContainer;
+          }
         }
-      })
-    );
+        return updated;
+      });
+
+      // Update users state to reflect the container changes
+      setUsers(currentUsers => {
+        return currentUsers.map(user => {
+          const updatedContainers = user.containers?.map(container => {
+            const processed = batchResults.find(pc => pc.id === container.id);
+            return processed || container;
+          }) || [];
+          
+          return {
+            ...user,
+            containers: updatedContainers
+          };
+        });
+      });
+    }
   };
 
   const toggleShowContainers = (userId) => {
