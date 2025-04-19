@@ -15,6 +15,7 @@ import {
     FaSearchPlus,
     FaSearchMinus,
     FaPlay,
+    FaStop,
     FaJs,
     FaPython,
     FaJava,
@@ -120,6 +121,7 @@ export default function CodeEditor({ socket }) {
     const [themeIndex, setThemeIndex] = useState(0);
     const [fontSize, setFontSize] = useState(14);
     const [isRunning, setIsRunning] = useState(false);
+    const [isKilling, setIsKilling] = useState(false);
     const editorRef = React.useRef(null);
 
     const dispatch = useDispatch();
@@ -210,6 +212,19 @@ export default function CodeEditor({ socket }) {
 
     const zoomOut = () => {
         setFontSize(prev => Math.max(prev - 2, 8)); // Min size 8
+    };
+
+    const handleKillProcess = async () => {
+        setIsKilling(true);
+        try {
+            // Send command to terminal to kill processes on port 4001
+            socket.emit("terminal:write", "lsof -ti:4001 | xargs kill -9\n");
+            console.log('Kill command sent to terminal');
+        } catch (error) {
+            console.error('Failed to kill process:', error);
+        } finally {
+            setIsKilling(false);
+        }
     };
 
     const handleRunCode = async () => {
@@ -395,6 +410,21 @@ export default function CodeEditor({ socket }) {
                     >
                         <FaExpandAlt size={14} />
                     </button>
+                    {currFile?.path && ['.js'].includes(currFile.path.substring(currFile.path.lastIndexOf('.'))) && (
+                        <button
+                            onClick={handleKillProcess}
+                            disabled={isRunning}
+                            className={`p-2 rounded flex items-center gap-2 ${
+                                isRunning 
+                                    ? 'text-gray-500 cursor-not-allowed' 
+                                    : 'text-gray-500'
+                            } transition-colors`}
+                            title="Kill Process"
+                        >
+                            <FaStop size={14} />
+                            <span className="text-xs">Kill</span>
+                        </button>
+                    )}
                     {currFile?.path && ['.cpp', '.js', '.py'].includes(currFile.path.substring(currFile.path.lastIndexOf('.'))) && (
                         <button
                             onClick={handleRunCode}
