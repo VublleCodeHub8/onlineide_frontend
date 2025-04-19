@@ -15,6 +15,7 @@ export default function Project() {
   const [terminalHeight, setTerminalHeight] = useState('350px');
   const [isSidebarHidden, setIsSidebarHidden] = useState(false);
   const [templateName, setTemplateName] = useState("");
+  const [containerInfo, setContainerInfo] = useState({ name: "", secondaryPort: "" });
   const params = useParams();
   const token = useSelector((state) => state.misc.token);
   const dispatch = useDispatch();
@@ -22,6 +23,29 @@ export default function Project() {
   useEffect(() => {
     async function fetchTemplateAndRunContainer() {
       const containerId = params.projectId;
+      
+      // Fetch container information
+      try {
+        const containerRes = await fetch(
+          `${import.meta.env.VITE_API_URL}/container/getContainerById/${containerId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + token.token,
+            },
+          }
+        );
+        if (containerRes.ok) {
+          const containerData = await containerRes.json();
+          setContainerInfo({
+            name: containerData.name || "",
+            secondaryPort: containerData.secondaryPort || ""
+          })
+        }
+      } catch (error) {
+        console.error("Failed to fetch container information:", error);
+      }
       
       // Fetch template name
       try {
@@ -111,8 +135,9 @@ export default function Project() {
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-blue-500" />
                 <span className="text-sm font-medium text-gray-200">
-                  {templateName || "Loading template..."}
+                  {templateName || "Loading template..."}  |
                 </span>
+                <span className="text-sm font-medium text-blue-400">{containerInfo.name}</span>
               </div>
             </div>
           </div>
@@ -137,14 +162,21 @@ export default function Project() {
             </Link>
             <div className="relative">
               <button
-                onMouseEnter={() => setShowHelp(true)}
-                onMouseLeave={() => setShowHelp(false)}
+                onClick={() => setShowHelp(v => !v)}
                 className="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-gray-200 transition-colors"
+                aria-label="Show help"
               >
                 <HelpCircle className="w-5 h-5" />
               </button>
               {showHelp && (
                 <div className="absolute right-0 top-full mt-2 w-72 p-4 rounded-lg bg-gray-800 border border-gray-700 shadow-xl z-50">
+                  <button
+                    onClick={() => setShowHelp(false)}
+                    className="absolute top-2 right-2 text-gray-400 hover:text-gray-200"
+                    aria-label="Close help"
+                  >
+                    &times;
+                  </button>
                   <h4 className="text-sm font-medium text-gray-200 mb-2">File & Folder Creation Help</h4>
                   <div className="space-y-2 text-xs text-gray-400">
                     <p><strong>Creating files in folders:</strong></p>
@@ -152,6 +184,14 @@ export default function Project() {
                     <code className="block bg-gray-900 p-2 rounded mt-1 text-gray-300">folder_name/file_name</code>
                     <p><strong>Example:</strong> src/index.js</p>
                     <p className="mt-2"><strong>Note:</strong> The same format applies when creating new folders.</p>
+                    {containerInfo.secondaryPort && (
+                      <div className="mt-3 pt-3 border-t border-gray-700">
+                        <p><strong>Secondary Port:</strong></p>
+                        <code className="block bg-gray-900 p-2 rounded mt-1 text-blue-300">{containerInfo.secondaryPort}</code>
+                        <p className="mt-1 text-gray-300">Run a server on port 4001 inside your container.</p>
+                        <code className="block bg-gray-900 p-2 rounded mt-1 text-gray-300">{`${import.meta.env.VITE_API_URL}/${containerInfo.secondaryPort}`}</code>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
