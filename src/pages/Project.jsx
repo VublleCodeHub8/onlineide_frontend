@@ -189,7 +189,7 @@ export default function Project() {
                         <p><strong>Secondary Port:</strong></p>
                         <code className="block bg-gray-900 p-2 rounded mt-1 text-blue-300">{containerInfo.secondaryPort}</code>
                         <p className="mt-1 text-gray-300">Run a server on port 4001 inside your container.</p>
-                        <code className="block bg-gray-900 p-2 rounded mt-1 text-gray-300">{`${import.meta.env.VITE_API_URL}/${containerInfo.secondaryPort}`}</code>
+                        <code className="block bg-gray-900 p-2 rounded mt-1 text-gray-300">{`${import.meta.env.VITE_API_URL_SOCKET}/${containerInfo.secondaryPort}`}</code>
                       </div>
                     )}
                   </div>
