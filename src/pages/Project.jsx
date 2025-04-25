@@ -76,7 +76,7 @@ export default function Project() {
           setContainerInfo({
             name: containerData.name || "",
             secondaryPort: containerData.secondaryPort || "",
-            port: containerData.port
+            port: containerData.secondaryPort
           })
         }
       } catch (error) {
@@ -442,29 +442,37 @@ export default function Project() {
               </button>
               {showHelp && (
                 <div className="absolute right-0 top-full mt-2 w-72 p-4 rounded-lg bg-gray-800 border border-gray-700 shadow-xl z-50">
-                  <button
-                    onClick={() => setShowHelp(false)}
-                    className="absolute top-2 right-2 text-gray-400 hover:text-gray-200"
-                    aria-label="Close help"
-                  >
-                    &times;
-                  </button>
-                  <h4 className="text-sm font-medium text-gray-200 mb-2">File & Folder Creation Help</h4>
-                  <div className="space-y-2 text-xs text-gray-400">
-                    <p><strong>Creating files in folders:</strong></p>
-                    <p>To create a file inside a folder, use the format:</p>
-                    <code className="block bg-gray-900 p-2 rounded mt-1 text-gray-300">folder_name/file_name</code>
-                    <p><strong>Example:</strong> src/index.js</p>
-                    <p className="mt-2"><strong>Note:</strong> The same format applies when creating new folders.</p>
-                    {containerInfo.secondaryPort && (
-                      <div className="mt-3 pt-3 border-t border-gray-700">
-                        <p><strong>Secondary Port:</strong></p>
-                        <p>This container has a secondary port: <code className="bg-gray-900 px-2 py-1 rounded">{containerInfo.secondaryPort}</code></p>
-                        <p>Access it at: <a href={`${import.meta.env.VITE_API_URL_SOCKET}:${containerInfo.secondaryPort}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{import.meta.env.VITE_API_URL_SOCKET}:{containerInfo.secondaryPort}</a></p>
-                      </div>
-                    )}
-                  </div>
+                <button
+                  onClick={() => setShowHelp(false)}
+                  className="absolute top-2 right-2 text-gray-400 hover:text-gray-200"
+                  aria-label="Close help"
+                >
+                  &times;
+                </button>
+                <h4 className="text-sm font-medium text-gray-200 mb-2">File & Folder Creation Help</h4>
+                <div className="space-y-2 text-xs text-gray-400">
+                  <p><strong>Creating files in folders:</strong></p>
+                  <p>To create a file inside a folder, use the format:</p>
+                  <code className="block bg-gray-900 p-2 rounded mt-1 text-gray-300">folder_name/file_name</code>
+                  <p><strong>Example:</strong> src/index.js</p>
+                  <p className="mt-2"><strong>Note:</strong> The same format applies when creating new folders.</p>
+                  {containerInfo.secondaryPort && (
+                    <div className="mt-3 pt-3 border-t border-gray-700">
+                      <p><strong>Secondary Port:</strong></p>
+                      <code className="block bg-gray-900 p-2 rounded mt-1 text-blue-300">{containerInfo.secondaryPort}</code>
+                      <p className="mt-1 text-gray-300">Run a server on port 4001 inside your container.</p>
+                      <a 
+                        href={`${import.meta.env.VITE_API_URL_SOCKET}:${containerInfo.secondaryPort}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block hover:text-blue-300 transition-colors"
+                      >
+                        <code className="block bg-gray-900 p-2 rounded mt-1 text-gray-300 hover:text-blue-300 cursor-pointer">{`${import.meta.env.VITE_API_URL_SOCKET}:${containerInfo.secondaryPort}`}</code>
+                      </a>
+                    </div>
+                  )}
                 </div>
+              </div>
               )}
             </div>
           </div>
