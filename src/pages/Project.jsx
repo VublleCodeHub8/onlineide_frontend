@@ -6,19 +6,54 @@ import { Link, useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
 import { projectAction } from "@/store/main";
-import { ArrowLeft, HelpCircle } from "lucide-react";
+import { ArrowLeft, HelpCircle, X, Send } from "lucide-react";
 import { FaChevronRight } from "react-icons/fa";
 
 export default function Project() {
   const [soc, setSoc] = useState(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [showPublishForm, setShowPublishForm] = useState(false);
   const [terminalHeight, setTerminalHeight] = useState('350px');
   const [isSidebarHidden, setIsSidebarHidden] = useState(false);
   const [templateName, setTemplateName] = useState("");
-  const [containerInfo, setContainerInfo] = useState({ name: "", secondaryPort: "" });
+  const [containerInfo, setContainerInfo] = useState({ name: "", secondaryPort: "", port: "" });
+  const [username, setUsername] = useState("");
+  const [isPublished, setIsPublished] = useState(false);
+  const [publicId, setPublicId] = useState(null);
+  const [isPrivate, setIsPrivate] = useState(true);
+  const [isTogglingPrivacy, setIsTogglingPrivacy] = useState(false);
+  const [publishFormData, setPublishFormData] = useState({
+    title: "",
+    description: ""
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingPublishStatus, setIsCheckingPublishStatus] = useState(true);
+  const [isDeletingPublic, setIsDeletingPublic] = useState(false);
+  
   const params = useParams();
   const token = useSelector((state) => state.misc.token);
   const dispatch = useDispatch();
+
+  // Function to check project privacy flag
+  const checkPrivacyFlag = async () => {
+    const containerId = params.projectId;
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/user/getpublicflag/${containerId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token.token,
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        console.log(data);
+        setIsPrivate(!data.flag); // isPublic: true -> isPrivate: false
+      }
+    } catch (error) {
+      console.error("Failed to check privacy flag:", error);
+    }
+  };
 
   useEffect(() => {
     async function fetchTemplateAndRunContainer() {
@@ -40,7 +75,8 @@ export default function Project() {
           const containerData = await containerRes.json();
           setContainerInfo({
             name: containerData.name || "",
-            secondaryPort: containerData.secondaryPort || ""
+            secondaryPort: containerData.secondaryPort || "",
+            port: containerData.port
           })
         }
       } catch (error) {
@@ -91,7 +127,192 @@ export default function Project() {
       }
     }
     fetchTemplateAndRunContainer();
+
+    const checkPublishStatus = async () => {
+      const containerId = params.projectId;
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/user/getpublicstatus/${containerId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token.token,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.publishStatus) {
+            setIsPublished(true);
+            setIsPrivate(data.isPrivate || true); // Set privacy status
+            setPublishFormData({
+              title: data.title || "",
+              description: data.description || ""
+            });
+          } else {
+            setIsPublished(false);
+            setIsPrivate(true); // Default to private if not published
+          }
+        }
+      } catch (error) {
+        console.error("Failed to check publish status:", error);
+      }
+    };
+
+    // Check publish status on mount
+    const checkStatus = async () => {
+      setIsCheckingPublishStatus(true);
+      try {
+        await checkPublishStatus();
+        await checkPrivacyFlag(); // Check privacy flag after publish status
+      } finally {
+        setIsCheckingPublishStatus(false);
+      }
+    };
+    checkStatus();
   }, []);
+  
+  useEffect(() => {
+    // Fetch user profile data to get username
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/user/getProfileData`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token.token,
+          },
+        });
+        
+        if (response.ok) {
+          const userData = await response.json();
+          setUsername(userData.name || "");
+          // Set initial title to container name if available
+          if (containerInfo.name) {
+            setPublishFormData(prev => ({
+              ...prev,
+              title: containerInfo.name
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch user profile data:", error);
+      }
+    };
+    
+    if (token && token.token) {
+      fetchUserProfile();
+    }
+  }, [token, params.projectId, containerInfo.name]);
+
+  const handlePublishFormChange = (e) => {
+    const { name, value } = e.target;
+    setPublishFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handlePublish = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/user/addpublic`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token.token,
+        },
+        body: JSON.stringify({
+          containerId: params.projectId,
+          title: publishFormData.title,
+          description: publishFormData.description,
+          owner: username,
+          port: containerInfo.port
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setIsPublished(true);
+        setPublicId(data.id);
+        setShowPublishForm(false);
+        alert("Project published successfully!");
+      } else {
+        alert("Failed to publish project. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error publishing project:", error);
+      alert("An error occurred while publishing the project.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeletePublic = async () => {
+    const containerId = params.projectId;
+    if (!containerId) return;
+    if (window.confirm("Are you sure you want to unpublish this project?")) {
+      setIsDeletingPublic(true);
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/user/deletepublic/${containerId}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token.token,
+          }
+        });
+        
+        if (response.ok) {
+          setIsPublished(false);
+          setPublicId(null);
+          alert("Project unpublished successfully!");
+        } else {
+          alert("Failed to unpublish project. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error unpublishing project:", error);
+        alert("An error occurred while unpublishing the project.");
+      } finally {
+        setIsDeletingPublic(false);
+      }
+    }
+  };
+
+  const togglePrivacy = async () => {
+    const containerId = params.projectId;
+    if (!containerId || !isPublished) return;
+    
+    setIsTogglingPrivacy(true);
+    try {
+      const endpoint = isPrivate 
+        ? `${import.meta.env.VITE_API_URL}/user/makepublic/${containerId}` 
+        : `${import.meta.env.VITE_API_URL}/user/makeprivate/${containerId}`;
+      
+      const response = await fetch(endpoint, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token.token,
+        }
+      });
+      
+      if (response.ok) {
+        // Get the new state (opposite of current state before the toggle)
+        const newPrivateState = !isPrivate;
+        // Fetch the latest privacy flag to ensure UI matches server state
+        await checkPrivacyFlag();
+        // Use the calculated new state for the alert message
+        alert(`Project is now ${newPrivateState ? 'private' : 'public'}`);
+      } else {
+        alert(`Failed to change project visibility. Please try again.`);
+      }
+    } catch (error) {
+      console.error("Error toggling project visibility:", error);
+      alert("An error occurred while changing project visibility.");
+    } finally {
+      setIsTogglingPrivacy(false);
+    }
+  };
 
   return (
     <div className="w-screen h-screen overflow-hidden bg-gray-900">
@@ -148,6 +369,57 @@ export default function Project() {
               </span>
             </Link>
             <div className="flex items-center gap-3">
+            {isCheckingPublishStatus ? (
+              <div className="flex items-center gap-2 px-4 py-2">
+                <span className="animate-spin rounded-full h-5 w-5 border-2 border-gray-500 border-t-transparent"></span>
+                <span className="text-gray-400">Checking status...</span>
+              </div>
+            ) : isPublished ? (
+              <>
+                <button
+                  onClick={handleDeletePublic}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-700 text-red-500 bg-transparent hover:bg-red-700/10 font-medium transition-all duration-200 shadow-sm"
+                  type="button"
+                  disabled={isDeletingPublic}
+                >
+                  {isDeletingPublic ? (
+                    <span className="animate-spin rounded-full h-5 w-5 border-2 border-red-500 border-t-transparent"></span>
+                  ) : (
+                    <span>Unpublish</span>
+                  )}
+                </button>
+                <div 
+                  className={`relative inline-flex h-9 w-28 cursor-pointer items-center rounded-full p-1 transition-colors duration-300 ease-in-out ${isPrivate ? 'bg-red-500/20 border border-red-500' : 'bg-green-500/20 border border-green-500'}`}
+                  onClick={!isTogglingPrivacy ? togglePrivacy : undefined}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Project is ${isPrivate ? 'private' : 'public'}, click to make it ${isPrivate ? 'public' : 'private'}`}
+                >
+                  <span 
+                    className={`flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-md transform transition-transform duration-300 ease-in-out ${isPrivate ? 'translate-x-0' : 'translate-x-[4.5rem]'}`}
+                  >
+                    {isTogglingPrivacy ? (
+                      <span className="animate-spin rounded-full h-4 w-4 border-2 border-gray-500 border-t-transparent"></span>
+                    ) : (
+                      <span className={`text-xs font-bold ${isPrivate ? 'text-red-500' : 'text-green-500'}`}>
+                        {isPrivate ? 'P' : 'P'}
+                      </span>
+                    )}
+                  </span>
+                  <span className={`absolute ${isPrivate ? 'left-10' : 'left-3'} text-xs font-medium transition-all duration-200 ${isPrivate ? 'text-red-500' : 'text-green-500'}`}>
+                    {isPrivate ? 'Private' : 'Public'}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <button
+                onClick={() => setShowPublishForm(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-green-700 text-green-500 bg-transparent hover:bg-green-700/10 font-medium transition-all duration-200 shadow-sm"
+                type="button"
+              >
+                <span>Publish</span>
+              </button>
+            )}
             <Link 
               to="/" 
               className="group flex items-center gap-2 px-4 py-2 rounded-lg
@@ -187,9 +459,8 @@ export default function Project() {
                     {containerInfo.secondaryPort && (
                       <div className="mt-3 pt-3 border-t border-gray-700">
                         <p><strong>Secondary Port:</strong></p>
-                        <code className="block bg-gray-900 p-2 rounded mt-1 text-blue-300">{containerInfo.secondaryPort}</code>
-                        <p className="mt-1 text-gray-300">Run a server on port 4001 inside your container.</p>
-                        <code className="block bg-gray-900 p-2 rounded mt-1 text-gray-300">{`${import.meta.env.VITE_API_URL_SOCKET}:${containerInfo.secondaryPort}`}</code>
+                        <p>This container has a secondary port: <code className="bg-gray-900 px-2 py-1 rounded">{containerInfo.secondaryPort}</code></p>
+                        <p>Access it at: <a href={`${import.meta.env.VITE_API_URL_SOCKET}:${containerInfo.secondaryPort}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{import.meta.env.VITE_API_URL_SOCKET}:{containerInfo.secondaryPort}</a></p>
                       </div>
                     )}
                   </div>
@@ -247,6 +518,55 @@ export default function Project() {
               </div>
             </div>
           </div>
+          {showPublishForm && (
+            <div className="fixed top-0 left-0 w-full h-full bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-8 rounded-lg border border-gray-700 shadow-lg w-96">
+                <h4 className="text-lg font-medium text-gray-200 mb-4">Publish Project</h4>
+                <form onSubmit={handlePublish}>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-200">Title:</label>
+                      <input 
+                        type="text" 
+                        name="title" 
+                        value={publishFormData.title} 
+                        onChange={handlePublishFormChange} 
+                        className="w-full p-2 rounded-lg bg-gray-700 border border-gray-600 text-gray-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-200">Description:</label>
+                      <textarea 
+                        name="description" 
+                        value={publishFormData.description} 
+                        onChange={handlePublishFormChange} 
+                        className="w-full p-2 rounded-lg bg-gray-700 border border-gray-600 text-gray-200"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mt-4">
+                    <button 
+                      type="submit" 
+                      className="px-4 py-2 rounded-lg bg-green-700 hover:bg-green-600 text-gray-200 font-medium transition-colors"
+                    >
+                      {isSubmitting ? (
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-green-500 border-t-green-200"></div>
+                      ) : (
+                        <span>Publish</span>
+                      )}
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setShowPublishForm(false)} 
+                      className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-200 font-medium transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

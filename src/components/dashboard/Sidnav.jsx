@@ -14,6 +14,7 @@ import {
     FaChevronLeft,
     FaChevronRight
 } from "react-icons/fa";
+import { Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function Sidebar({ isOpen }) {
@@ -67,6 +68,12 @@ function Sidebar({ isOpen }) {
             path: "/analytics",
             name: "Analytics",
             icon: <FaRegChartBar/>,
+            showFor: ['admin', 'dev', 'user']
+        },
+        {
+            path: "/public",
+            name: "Public",
+            icon: <Globe/>,
             showFor: ['admin', 'dev', 'user']
         },
         {

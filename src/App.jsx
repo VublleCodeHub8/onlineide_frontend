@@ -30,6 +30,8 @@ import AdminContactUs from "./pages/admin/adminContactUs";
 import Notification from "./pages/dev/notification";
 import DevBugReports from "./pages/dev/bugReports";
 import AdditionalInfo from "./pages/dashboard/AdditionalInfo";
+import Public from "./pages/dashboard/Public";
+
 const router = createBrowserRouter([
   {
     path: "auth",
@@ -66,6 +68,10 @@ const router = createBrowserRouter([
           {
             path: "templates",
             element: <Templates />,
+          },
+          {
+            path: "public",
+            element: <Public />,
           },
           {
             path: "profile",
