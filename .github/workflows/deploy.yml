@@ -19,5 +19,6 @@ jobs:
             cd onlineide_frontend
             git pull
             npm ci
+            npm install buffer
             npm run build
             pm2 restart vite-preview

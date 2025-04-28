@@ -12,6 +12,18 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'dist', // 👈 Ensure this is present for Vercel
+    outDir: 'dist',
+  },
+  define: {
+    global: {
+      Buffer: 'buffer',
+    },
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: 'globalThis',
+      },
+    },
   },
 })

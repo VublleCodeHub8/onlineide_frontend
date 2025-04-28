@@ -554,7 +554,6 @@ export default function CodeEditor({ socket }) {
                             enableMultiselect: true,
                             fadeFoldWidgets: true,
                             showFoldWidgets: true,
-                            showLineNumbers: true,
                             highlightSelectedWord: true,
                             animatedScroll: true,
                             scrollPastEnd: 0.5,
