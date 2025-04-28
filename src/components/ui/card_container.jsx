@@ -36,7 +36,8 @@ export const HoverEffect = ({
   className,
   searchQuery = "",
   onRefresh = null,
-  onStatsUpdate = null
+  onStatsUpdate = null,
+  limit,
 }) => {
   let [hoveredIndex, setHoveredIndex] = useState(null);
   let [editIndex, setEditIndex] = useState(null);
@@ -71,6 +72,7 @@ export const HoverEffect = ({
       }
       
       let data = await response.json();
+      data = data.reverse().slice(0, limit);
       const userContainers = await Promise.all(data.map(async (container) => {
         const templateName = await fetch(`${import.meta.env.VITE_API_URL}/container/templateName/${container.id}`, {
           method: "GET",

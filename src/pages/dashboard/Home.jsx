@@ -167,7 +167,7 @@ useEffect(() => {
                   <div className="flex items-center space-x-3">
                     <h2 className="text-xl font-bold text-gray-800">Recent Containers</h2>
                     <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                      Last 5
+                      Last 3
                     </span>
                   </div>
                   <div className="transform hover:scale-105 transition-transform duration-200">
@@ -180,7 +180,7 @@ useEffect(() => {
               
               <div className="p-6">
                 <div className="rounded-xl overflow-hidden border border-gray-100">
-                  <HoverEffect items={projects.slice().reverse().slice(0,5)} />
+                  <HoverEffect limit={3} />
                 </div>
               </div>
             </div>
