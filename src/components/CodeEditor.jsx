@@ -25,7 +25,9 @@ import {
     FaFile,
     FaFileAlt,
     FaFileCode,
-    FaDatabase
+    FaDatabase,
+    FaPuzzlePiece,
+    FaBoxOpen
 } from "react-icons/fa";
 import {
     SiCplusplus,
@@ -61,6 +63,87 @@ import "ace-builds/src-noconflict/theme-solarized_light";
 import "ace-builds/src-noconflict/theme-tomorrow";
 
 let timer;
+
+// Code snippet templates organized by language
+const codeSnippets = {
+    javascript: [
+        {
+            name: "Function",
+            description: "Create a named function",
+            code: "function functionName(params) {\n\t// code\n\treturn;\n}"
+        },
+        {
+            name: "Arrow Function",
+            description: "Create an arrow function",
+            code: "const functionName = (params) => {\n\t// code\n\treturn;\n}"
+        },
+        {
+            name: "Class",
+            description: "Create a class",
+            code: "class ClassName {\n\tconstructor(params) {\n\t\t// constructor\n\t}\n\n\tmethod() {\n\t\t// method body\n\t}\n}"
+        },
+        {
+            name: "React Component",
+            description: "Create a React functional component",
+            code: "import React from 'react';\n\nconst ComponentName = ({ props }) => {\n\treturn (\n\t\t<div>\n\t\t\t{/* content */}\n\t\t</div>\n\t);\n};\n\nexport default ComponentName;"
+        },
+        {
+            name: "useState Hook",
+            description: "React useState hook template",
+            code: "const [state, setState] = useState(initialValue);"
+        },
+        {
+            name: "useEffect Hook",
+            description: "React useEffect hook template",
+            code: "useEffect(() => {\n\t// effect code\n\n\treturn () => {\n\t\t// cleanup code\n\t};\n}, [dependencies]);"
+        },
+    ],
+    python: [
+        {
+            name: "Function",
+            description: "Create a Python function",
+            code: "def function_name(params):\n\t# code\n\treturn"
+        },
+        {
+            name: "Class",
+            description: "Create a Python class",
+            code: "class ClassName:\n\tdef __init__(self, params):\n\t\t# constructor\n\t\tpass\n\n\tdef method(self):\n\t\t# method body\n\t\tpass"
+        },
+    ],
+    c_cpp: [
+        {
+            name: "Main Function",
+            description: "C++ main function template",
+            code: "#include <iostream>\n\nint main() {\n\t// Your code here\n\tstd::cout << \"Hello, World!\" << std::endl;\n\treturn 0;\n}"
+        },
+        {
+            name: "Class",
+            description: "C++ class template",
+            code: "class ClassName {\nprivate:\n\t// private members\n\n\npublic:\n\t// Constructor\n\tClassName() {\n\t\t// initialization\n\t}\n\n\t// Methods\n\tvoid method() {\n\t\t// method implementation\n\t}\n};"
+        },
+    ],
+    html: [
+        {
+            name: "HTML5 Template",
+            description: "Basic HTML5 template",
+            code: "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n\t<meta charset=\"UTF-8\">\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\t<title>Document</title>\n</head>\n<body>\n\t\n</body>\n</html>"
+        },
+    ],
+    css: [
+        {
+            name: "Flexbox Container",
+            description: "CSS flexbox container template",
+            code: ".container {\n\tdisplay: flex;\n\tflex-direction: row;\n\tjustify-content: center;\n\talign-items: center;\n\tgap: 10px;\n}"
+        },
+    ]
+};
+
+// Helper function to get snippets for a specific language
+const getLanguageSnippets = (extension) => {
+    if (!extension) return [];
+    const mode = extentionMapping[extension];
+    return codeSnippets[mode] || [];
+};
 
 const themes = {
     dark: [
@@ -122,6 +205,8 @@ export default function CodeEditor({ socket }) {
     const [fontSize, setFontSize] = useState(14);
     const [isRunning, setIsRunning] = useState(false);
     const [isKilling, setIsKilling] = useState(false);
+    const [showSnippets, setShowSnippets] = useState(false);
+    const [snippetSearch, setSnippetSearch] = useState("");
     const editorRef = React.useRef(null);
 
     const dispatch = useDispatch();
@@ -212,6 +297,21 @@ export default function CodeEditor({ socket }) {
 
     const zoomOut = () => {
         setFontSize(prev => Math.max(prev - 2, 8)); // Min size 8
+    };
+
+    // Function to toggle code snippets panel
+    const toggleSnippets = () => {
+        setShowSnippets(!showSnippets);
+    };
+
+    // Function to insert a code snippet
+    const insertSnippet = (snippetCode) => {
+        if (editorRef.current && editorRef.current.editor) {
+            const editor = editorRef.current.editor;
+            editor.session.insert(editor.getCursorPosition(), snippetCode);
+            setShowSnippets(false); // Close snippets panel after insertion
+            setSave("unsaved"); // Mark as unsaved after inserting snippet
+        }
     };
 
     const handleKillProcess = async () => {
@@ -331,6 +431,28 @@ export default function CodeEditor({ socket }) {
                     flex items-center gap-2 px-3 border-l
                     ${isDarkMode ? 'border-zinc-700' : 'border-slate-200'}
                 `}>
+                    {/* Code Snippets toggle */}
+                    {currFile && (
+                        <button
+                            onClick={toggleSnippets}
+                            className={`
+                                p-1.5 rounded-lg transition-colors flex items-center gap-1
+                                ${isDarkMode
+                                    ? showSnippets 
+                                      ? 'text-purple-400 hover:text-purple-300 bg-zinc-700' 
+                                      : 'text-zinc-400 hover:text-white hover:bg-zinc-700'
+                                    : showSnippets 
+                                      ? 'text-purple-600 hover:text-purple-500 bg-slate-200' 
+                                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+                                }
+                            `}
+                            title="Code Snippets Library"
+                        >
+                            <FaPuzzlePiece size={14} />
+                            <span className="text-xs">Snippets</span>
+                        </button>
+                    )}
+                    
                     {/* Zoom Controls */}
                     <div className="flex items-center mr-2 border-r border-zinc-600 pr-2">
                         <button
@@ -507,6 +629,69 @@ export default function CodeEditor({ socket }) {
                 </div>
             ) : (
                 <div className="flex-1 relative">
+                    {/* Code Snippets Panel */}
+                    {showSnippets && (
+                        <div className={`absolute right-0 top-0 z-10 w-80 h-full overflow-y-auto 
+                            ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-slate-200'} 
+                            border-l shadow-lg`}>
+                            <div className="p-3 border-b border-zinc-700">
+                                <h3 className={`font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+                                    <FaPuzzlePiece className="inline mr-2" /> Code Snippets
+                                </h3>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Search snippets..."
+                                        value={snippetSearch}
+                                        onChange={(e) => setSnippetSearch(e.target.value)}
+                                        className={`w-full p-2 rounded 
+                                            ${isDarkMode 
+                                                ? 'bg-zinc-700 text-white placeholder-zinc-400 border-zinc-600' 
+                                                : 'bg-slate-100 text-slate-800 placeholder-slate-400 border-slate-300'} 
+                                            border`}
+                                    />
+                                    <FaSearch className={`absolute right-3 top-3 ${isDarkMode ? 'text-zinc-400' : 'text-slate-400'}`} />
+                                </div>
+                            </div>
+                            <div className="p-3">
+                                {getLanguageSnippets(currFile?.extension)
+                                    .filter(snippet => 
+                                        snippet.name.toLowerCase().includes(snippetSearch.toLowerCase()) ||
+                                        snippet.description.toLowerCase().includes(snippetSearch.toLowerCase())
+                                    )
+                                    .map((snippet, index) => (
+                                        <div 
+                                            key={index} 
+                                            className={`mb-3 p-3 rounded cursor-pointer transition-colors 
+                                                ${isDarkMode 
+                                                    ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-200' 
+                                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-800'}`}
+                                            onClick={() => insertSnippet(snippet.code)}
+                                        >
+                                            <div className="flex justify-between items-center mb-1">
+                                                <h4 className="font-medium">{snippet.name}</h4>
+                                                <span className="text-xs px-2 py-1 rounded bg-blue-500 text-white">
+                                                    {extentionMapping[currFile?.extension]}
+                                                </span>
+                                            </div>
+                                            <p className={`text-xs ${isDarkMode ? 'text-zinc-400' : 'text-slate-600'}`}>
+                                                {snippet.description}
+                                            </p>
+                                        </div>
+                                    ))
+                                }
+                                {getLanguageSnippets(currFile?.extension).filter(snippet => 
+                                    snippet.name.toLowerCase().includes(snippetSearch.toLowerCase()) ||
+                                    snippet.description.toLowerCase().includes(snippetSearch.toLowerCase())
+                                ).length === 0 && (
+                                    <div className={`text-center py-5 ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>
+                                        <FaBoxOpen className="mx-auto mb-2 text-2xl" />
+                                        <p>No snippets found for this language or search query</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                     <AceEditor
                         ref={editorRef}
                         mode={extentionMapping[currFile.extension]}
