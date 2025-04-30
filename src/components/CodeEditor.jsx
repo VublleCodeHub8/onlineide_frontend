@@ -27,7 +27,10 @@ import {
     FaFileCode,
     FaDatabase,
     FaPuzzlePiece,
-    FaBoxOpen
+    FaBoxOpen,
+    FaColumns,
+    FaIndent,
+    FaCrosshairs
 } from "react-icons/fa";
 import {
     SiCplusplus,
@@ -207,6 +210,7 @@ export default function CodeEditor({ socket }) {
     const [isKilling, setIsKilling] = useState(false);
     const [showSnippets, setShowSnippets] = useState(false);
     const [snippetSearch, setSnippetSearch] = useState("");
+    const [cursorPosition, setCursorPosition] = useState({ row: 1, column: 1 });
     const editorRef = React.useRef(null);
 
     const dispatch = useDispatch();
@@ -314,6 +318,17 @@ export default function CodeEditor({ socket }) {
         }
     };
 
+    // Function to update cursor position
+    const updateCursorPosition = () => {
+        if (editorRef.current && editorRef.current.editor) {
+            const cursorPos = editorRef.current.editor.getCursorPosition();
+            setCursorPosition({
+                row: cursorPos.row + 1, // Adding 1 since Ace is 0-indexed but UI should be 1-indexed
+                column: cursorPos.column + 1
+            });
+        }
+    };
+    
     const handleKillProcess = async () => {
         setIsKilling(true);
         try {
@@ -611,6 +626,11 @@ export default function CodeEditor({ socket }) {
                         </div>
                     </div>
                     <div className="flex items-center space-x-4 text-zinc-400">
+                        {/* Cursor Position Indicator */}
+                        <div className="flex items-center space-x-1">
+                            <FaCrosshairs size={10} className="opacity-70" />
+                            <span>Ln {cursorPosition.row}, Col {cursorPosition.column}</span>
+                        </div>
                         <span>{extentionMapping[currFile.extension]}</span>
                         <span>UTF-8</span>
                         <span>LF</span>
@@ -719,6 +739,12 @@ export default function CodeEditor({ socket }) {
                                 },
                                 readOnly: false
                             });
+                            
+                            // Set up cursor position tracking
+                            editor.selection.on('changeCursor', updateCursorPosition);
+                            
+                            // Initialize cursor position
+                            updateCursorPosition();
                         }}
                         width="100%"
                         height="100%"
