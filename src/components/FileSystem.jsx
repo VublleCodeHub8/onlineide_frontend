@@ -89,6 +89,10 @@ export default function FileSystem({ socket, onSidebarToggle, isHidden }) {
     const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
     const [newFileName, setNewFileName] = useState('');
     const [newFolderName, setNewFolderName] = useState('');
+    const [selectedParentFolder, setSelectedParentFolder] = useState('');
+    const [folderPath, setFolderPath] = useState([]);
+    const [currentFolderLevel, setCurrentFolderLevel] = useState([]);
+    const [availableFolders, setAvailableFolders] = useState([]);
     const [showFilterMenu, setShowFilterMenu] = useState(false);
     const [recentFiles, setRecentFiles] = useState([]);
     const [viewMode, setViewMode] = useState('tree'); // 'tree' or 'list'
@@ -353,6 +357,7 @@ export default function FileSystem({ socket, onSidebarToggle, isHidden }) {
             }
 
             console.log('File created successfully:', data);
+            handleRefresh();
             return data;
         } catch (error) {
             console.error('Error in handleNewFile:', error);
@@ -516,8 +521,179 @@ export default function FileSystem({ socket, onSidebarToggle, isHidden }) {
         }
     }
 
+    // Extract all folders from the file tree structure
+    useEffect(() => {
+        if (fileTree) {
+            const extractFolders = (tree, path = '') => {
+                let folders = [];
+                
+                if (Array.isArray(tree)) {
+                    tree.forEach(item => {
+                        if (item.children) {
+                            const currentPath = path ? `${path}/${item.name}` : item.name;
+                            folders.push(currentPath);
+                            folders = [...folders, ...extractFolders(item.children, currentPath)];
+                        }
+                    });
+                }
+                
+                return folders;
+            };
+            
+            const folders = extractFolders(fileTree);
+            folders.unshift(''); // Add root folder
+            setAvailableFolders(folders);
+        }
+    }, [fileTree]);
+
+    // Extract folder structure from the file tree
+    useEffect(() => {
+        if (fileTree) {
+            // Function to extract the full folder structure
+            const extractFolderStructure = (tree, path = '') => {
+                let folderStructure = {};
+                
+                if (Array.isArray(tree)) {
+                    tree.forEach(item => {
+                        if (item.children) {
+                            const currentPath = path ? `${path}/${item.name}` : item.name;
+                            folderStructure[currentPath] = extractFolderStructure(item.children, currentPath);
+                        }
+                    });
+                }
+                
+                return folderStructure;
+            };
+            
+            // Extract top-level folders to display initially
+            const extractTopLevelFolders = (tree) => {
+                if (!Array.isArray(tree)) return [];
+                
+                return tree
+                    .filter(item => item.children)
+                    .map(item => item.name);
+            };
+            
+            const folderStructure = extractFolderStructure(fileTree);
+            setAvailableFolders(folderStructure);
+            setCurrentFolderLevel(extractTopLevelFolders(fileTree));
+        }
+    }, [fileTree]);
+
+    // Handle folder navigation
+    const handleFolderSelect = (folder) => {
+        // If empty folder is selected, reset to root
+        if (!folder) {
+            setFolderPath([]);
+            if (fileTree) {
+                const topLevel = fileTree
+                    .filter(item => item.children)
+                    .map(item => item.name);
+                setCurrentFolderLevel(topLevel);
+            }
+            setSelectedParentFolder('');
+            return;
+        }
+
+        // Update the folder path
+        const newPath = [...folderPath, folder];
+        setFolderPath(newPath);
+
+        // Build the current full path
+        const currentFullPath = newPath.join('/');
+        setSelectedParentFolder(currentFullPath);
+
+        // Find subfolders at this level
+        const findSubfolders = (tree, targetPath) => {
+            if (!targetPath) return tree;
+            
+            const pathParts = targetPath.split('/');
+            let currentLevel = tree;
+            
+            // Navigate to the current folder in the tree
+            for (const part of pathParts) {
+                const found = currentLevel.find(item => item.name === part && item.children);
+                if (!found) return [];
+                currentLevel = found.children;
+            }
+            
+            // Return folder names at this level
+            return currentLevel
+                .filter(item => item.children)
+                .map(item => item.name);
+        };
+        
+        // Update the current folder level with subfolders
+        const subfolders = findSubfolders(fileTree, currentFullPath);
+        setCurrentFolderLevel(subfolders);
+    };
+
+    // Go up one level in folder navigation
+    const goUpOneLevel = () => {
+        if (folderPath.length === 0) return;
+        
+        const newPath = [...folderPath];
+        newPath.pop();
+        setFolderPath(newPath);
+        
+        // Update the selected parent folder
+        const newParentFolder = newPath.join('/');
+        setSelectedParentFolder(newParentFolder);
+        
+        // Calculate the new current level
+        if (newPath.length === 0) {
+            // Back to root level
+            const topLevel = fileTree
+                .filter(item => item.children)
+                .map(item => item.name);
+            setCurrentFolderLevel(topLevel);
+        } else {
+            // Find folders at the new level
+            const findSubfolders = (tree, targetPath) => {
+                if (!targetPath) return tree;
+                
+                const pathParts = targetPath.split('/');
+                let currentLevel = tree;
+                
+                // Navigate to the current folder in the tree
+                for (const part of pathParts) {
+                    const found = currentLevel.find(item => item.name === part && item.children);
+                    if (!found) return [];
+                    currentLevel = found.children;
+                }
+                
+                // Return folder names at this level
+                return currentLevel
+                    .filter(item => item.children)
+                    .map(item => item.name);
+            };
+            
+            const subfolders = findSubfolders(fileTree, newParentFolder);
+            setCurrentFolderLevel(subfolders);
+        }
+    };
+
     return (
         <div className="h-full flex flex-col bg-zinc-800">
+            {/* Custom styles for select options */}
+            <style>{`
+                select option {
+                    background-color: #1f2937;
+                    color: #e5e7eb;
+                    padding: 8px;
+                    margin: 4px;
+                    border-radius: 4px;
+                }
+                
+                select option:hover, select option:focus {
+                    background-color: #374151;
+                }
+                
+                select option:checked {
+                    background-color: #3b82f6;
+                    color: white;
+                }
+            `}</style>
             {/* Header with view toggle */}
             <div className="flex items-center justify-between p-3 border-b border-zinc-700">
                 <div className="flex items-center gap-2">
@@ -714,7 +890,11 @@ export default function FileSystem({ socket, onSidebarToggle, isHidden }) {
                                 <h3 className="text-lg font-medium text-gray-200">Create New File</h3>
                             </div>
                             <button
-                                onClick={() => setShowNewFileDialog(false)}
+                                onClick={() => {
+                                    setShowNewFileDialog(false);
+                                    setFolderPath([]);
+                                    setSelectedParentFolder('');
+                                }}
                                 className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-zinc-700/50 transition-colors"
                             >
                                 <FaTimes size={16} />
@@ -723,14 +903,121 @@ export default function FileSystem({ socket, onSidebarToggle, isHidden }) {
                         <div className="p-4">
                             <form onSubmit={(e) => {
                                 e.preventDefault();
-                                const filePath = newFileName.trim();
-                                if (filePath) {
+                                const fileName = newFileName.trim();
+                                if (fileName) {
+                                    const filePath = selectedParentFolder 
+                                        ? `${selectedParentFolder}/${fileName}` 
+                                        : fileName;
                                     handleNewFile(filePath);
                                     setNewFileName('');
+                                    setSelectedParentFolder('');
+                                    setFolderPath([]);
                                     setShowNewFileDialog(false);
                                 }
                             }}>
                                 <div className="space-y-4">
+                                    {/* Folder Navigation Breadcrumbs */}
+                                    <div className="flex items-center flex-wrap gap-1 text-xs mb-1 bg-zinc-900/50 p-2 rounded">
+                                        <button 
+                                            type="button"
+                                            onClick={() => handleFolderSelect('')}
+                                            className="px-2 py-1 bg-zinc-800 text-blue-400 rounded hover:bg-zinc-700 transition-colors"
+                                        >
+                                            root
+                                        </button>
+                                        
+                                        {folderPath.map((folder, index) => (
+                                            <div key={index} className="flex items-center">
+                                                <span className="text-gray-500 mx-1">/</span>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => {
+                                                        // Navigate to this level
+                                                        const newPath = folderPath.slice(0, index + 1);
+                                                        setFolderPath(newPath);
+                                                        setSelectedParentFolder(newPath.join('/'));
+                                                        
+                                                        // Update current level
+                                                        const findSubfolders = (tree, targetPath) => {
+                                                            if (!targetPath) return tree;
+                                                            
+                                                            const pathParts = targetPath.split('/');
+                                                            let currentLevel = tree;
+                                                            
+                                                            for (const part of pathParts) {
+                                                                const found = currentLevel.find(item => item.name === part && item.children);
+                                                                if (!found) return [];
+                                                                currentLevel = found.children;
+                                                            }
+                                                            
+                                                            return currentLevel
+                                                                .filter(item => item.children)
+                                                                .map(item => item.name);
+                                                        };
+                                                        
+                                                        const newParentFolder = newPath.join('/');
+                                                        const subfolders = findSubfolders(fileTree, newParentFolder);
+                                                        setCurrentFolderLevel(subfolders);
+                                                    }}
+                                                    className="px-2 py-1 bg-zinc-800 text-blue-400 rounded hover:bg-zinc-700 transition-colors"
+                                                >
+                                                    {folder}
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    
+                                    {/* Folder Selection */}
+                                    <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="block text-sm text-gray-400">Select Folder</label>
+                                            {folderPath.length > 0 && (
+                                                <button 
+                                                    type="button"
+                                                    onClick={goUpOneLevel}
+                                                    className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1 rounded hover:bg-zinc-700/50 flex items-center gap-1"
+                                                >
+                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
+                                                    </svg>
+                                                    Up One Level
+                                                </button>
+                                            )}
+                                        </div>
+                                        
+                                        <div className="bg-zinc-900/70 border border-zinc-700 rounded-lg max-h-40 overflow-y-auto p-1">
+                                            {currentFolderLevel.length === 0 ? (
+                                                <div className="text-center p-3 text-gray-500 text-sm">
+                                                    No subfolders in this directory
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-1 gap-1">
+                                                    {currentFolderLevel.map((folder) => (
+                                                        <button
+                                                            key={folder}
+                                                            type="button"
+                                                            onClick={() => handleFolderSelect(folder)}
+                                                            className="flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-300
+                                                                     rounded hover:bg-zinc-700/80 transition-colors"
+                                                        >
+                                                            <FaFolder className="text-amber-400 flex-shrink-0" size={14} />
+                                                            <span className="truncate">{folder}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Current Path Display */}
+                                    <div className="text-xs text-gray-400 bg-zinc-900/50 px-3 py-2 rounded-lg flex items-center gap-2">
+                                        <span>Current path:</span>
+                                        <code className="bg-zinc-800 px-2 py-0.5 rounded text-blue-400 font-mono">
+                                            /{selectedParentFolder}
+                                        </code>
+                                    </div>
+                                    
+                                    {/* File Name Input */}
                                     <div>
                                         <label className="block text-sm text-gray-400 mb-1">File Name</label>
                                         <div className="relative">
@@ -756,6 +1043,9 @@ export default function FileSystem({ socket, onSidebarToggle, isHidden }) {
                                                 </button>
                                             )}
                                         </div>
+                                        <p className="mt-2 text-xs text-gray-500">
+                                            File will be created at: <span className="text-blue-400 font-mono bg-zinc-800/70 px-1.5 py-0.5 rounded">/{selectedParentFolder}{selectedParentFolder ? '/' : ''}{newFileName || 'filename'}</span>
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="flex justify-end gap-3 mt-6">
@@ -763,6 +1053,8 @@ export default function FileSystem({ socket, onSidebarToggle, isHidden }) {
                                         type="button"
                                         onClick={() => {
                                             setNewFileName('');
+                                            setSelectedParentFolder('');
+                                            setFolderPath([]);
                                             setShowNewFileDialog(false);
                                         }}
                                         className="px-4 py-2 text-sm text-gray-400 hover:text-gray-300 
@@ -797,7 +1089,11 @@ export default function FileSystem({ socket, onSidebarToggle, isHidden }) {
                                 <h3 className="text-lg font-medium text-gray-200">Create New Folder</h3>
                             </div>
                             <button
-                                onClick={() => setShowNewFolderDialog(false)}
+                                onClick={() => {
+                                    setShowNewFolderDialog(false);
+                                    setFolderPath([]);
+                                    setSelectedParentFolder('');
+                                }}
                                 className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-zinc-700/50 transition-colors"
                             >
                                 <FaTimes size={16} />
@@ -806,11 +1102,16 @@ export default function FileSystem({ socket, onSidebarToggle, isHidden }) {
                         <div className="p-4">
                             <form onSubmit={async (e) => {
                                 e.preventDefault();
-                                const folderPath = newFolderName.trim();
-                                if (folderPath) {
+                                const folderName = newFolderName.trim();
+                                if (folderName) {
                                     try {
+                                        const folderPath = selectedParentFolder 
+                                            ? `${selectedParentFolder}/${folderName}` 
+                                            : folderName;
                                         await handleNewFolder(folderPath);
                                         setNewFolderName('');
+                                        setSelectedParentFolder('');
+                                        setFolderPath([]);
                                         setShowNewFolderDialog(false);
                                         handleRefresh();
                                     } catch (error) {
@@ -819,6 +1120,108 @@ export default function FileSystem({ socket, onSidebarToggle, isHidden }) {
                                 }
                             }}>
                                 <div className="space-y-4">
+                                    {/* Folder Navigation Breadcrumbs */}
+                                    <div className="flex items-center flex-wrap gap-1 text-xs mb-1 bg-zinc-900/50 p-2 rounded">
+                                        <button 
+                                            type="button"
+                                            onClick={() => handleFolderSelect('')}
+                                            className="px-2 py-1 bg-zinc-800 text-amber-400 rounded hover:bg-zinc-700 transition-colors"
+                                        >
+                                            root
+                                        </button>
+                                        
+                                        {folderPath.map((folder, index) => (
+                                            <div key={index} className="flex items-center">
+                                                <span className="text-gray-500 mx-1">/</span>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => {
+                                                        // Navigate to this level
+                                                        const newPath = folderPath.slice(0, index + 1);
+                                                        setFolderPath(newPath);
+                                                        setSelectedParentFolder(newPath.join('/'));
+                                                        
+                                                        // Update current level
+                                                        const findSubfolders = (tree, targetPath) => {
+                                                            if (!targetPath) return tree;
+                                                            
+                                                            const pathParts = targetPath.split('/');
+                                                            let currentLevel = tree;
+                                                            
+                                                            for (const part of pathParts) {
+                                                                const found = currentLevel.find(item => item.name === part && item.children);
+                                                                if (!found) return [];
+                                                                currentLevel = found.children;
+                                                            }
+                                                            
+                                                            return currentLevel
+                                                                .filter(item => item.children)
+                                                                .map(item => item.name);
+                                                        };
+                                                        
+                                                        const newParentFolder = newPath.join('/');
+                                                        const subfolders = findSubfolders(fileTree, newParentFolder);
+                                                        setCurrentFolderLevel(subfolders);
+                                                    }}
+                                                    className="px-2 py-1 bg-zinc-800 text-amber-400 rounded hover:bg-zinc-700 transition-colors"
+                                                >
+                                                    {folder}
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    
+                                    {/* Folder Selection */}
+                                    <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="block text-sm text-gray-400">Select Folder</label>
+                                            {folderPath.length > 0 && (
+                                                <button 
+                                                    type="button"
+                                                    onClick={goUpOneLevel}
+                                                    className="text-xs text-amber-400 hover:text-amber-300 px-2 py-1 rounded hover:bg-zinc-700/50 flex items-center gap-1"
+                                                >
+                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
+                                                    </svg>
+                                                    Up One Level
+                                                </button>
+                                            )}
+                                        </div>
+                                        
+                                        <div className="bg-zinc-900/70 border border-zinc-700 rounded-lg max-h-40 overflow-y-auto p-1">
+                                            {currentFolderLevel.length === 0 ? (
+                                                <div className="text-center p-3 text-gray-500 text-sm">
+                                                    No subfolders in this directory
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-1 gap-1">
+                                                    {currentFolderLevel.map((folder) => (
+                                                        <button
+                                                            key={folder}
+                                                            type="button"
+                                                            onClick={() => handleFolderSelect(folder)}
+                                                            className="flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-300
+                                                                     rounded hover:bg-zinc-700/80 transition-colors"
+                                                        >
+                                                            <FaFolder className="text-amber-400 flex-shrink-0" size={14} />
+                                                            <span className="truncate">{folder}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Current Path Display */}
+                                    <div className="text-xs text-gray-400 bg-zinc-900/50 px-3 py-2 rounded-lg flex items-center gap-2">
+                                        <span>Current path:</span>
+                                        <code className="bg-zinc-800 px-2 py-0.5 rounded text-amber-400 font-mono">
+                                            /{selectedParentFolder}
+                                        </code>
+                                    </div>
+                                    
+                                    {/* Folder Name Input */}
                                     <div>
                                         <label className="block text-sm text-gray-400 mb-1">Folder Name</label>
                                         <div className="relative">
@@ -844,6 +1247,9 @@ export default function FileSystem({ socket, onSidebarToggle, isHidden }) {
                                                 </button>
                                             )}
                                         </div>
+                                        <p className="mt-2 text-xs text-gray-500">
+                                            Folder will be created at: <span className="text-amber-400 font-mono bg-zinc-800/70 px-1.5 py-0.5 rounded">/{selectedParentFolder}{selectedParentFolder ? '/' : ''}{newFolderName || 'foldername'}</span>
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="flex justify-end gap-3 mt-6">
@@ -851,6 +1257,8 @@ export default function FileSystem({ socket, onSidebarToggle, isHidden }) {
                                         type="button"
                                         onClick={() => {
                                             setNewFolderName('');
+                                            setSelectedParentFolder('');
+                                            setFolderPath([]);
                                             setShowNewFolderDialog(false);
                                         }}
                                         className="px-4 py-2 text-sm text-gray-400 hover:text-gray-300 
