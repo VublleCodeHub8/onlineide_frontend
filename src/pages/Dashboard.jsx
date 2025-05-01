@@ -85,10 +85,21 @@ function DashboardLayout() {
               <Menu className="h-5 w-5 text-gray-600" />
             </button>
             <div className="flex items-center">
-              <div className="w-6 h-8 bg-blue-600 rounded-md flex items-center justify-center text-white font-bold ">
-                T
+              <div className="relative w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-md flex items-center justify-center shadow-lg border border-blue-400/30 overflow-hidden group">
+                <div className="absolute inset-0 bg-grid-white/[0.05] bg-[length:8px_8px]"></div>
+                <div className="absolute w-20 h-20 bg-blue-400 opacity-30 blur-2xl -z-10"></div>
+                <span className="text-white font-mono font-bold text-lg relative z-10 group-hover:text-blue-100 transition-colors duration-300">T</span>
               </div>
-              <span className="ml-[0.1rem] text-xl font-semibold text-gray-800">erminus</span>
+              <div className="ml-1.5 flex flex-col justify-center">
+                <span className="font-mono font-bold text-xl text-slate-800 relative tracking-tighter">
+                  <span className="relative inline-block">
+                    erminus
+                    <span className="absolute -bottom-0.5 left-0 w-full h-0.5 bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-600 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+                  </span>
+                  <span className="text-indigo-500 ml-0.5 text-xs align-top">&lt;/&gt;</span>
+                </span>
+                <span className="text-[10px] text-slate-500 -mt-1 font-medium tracking-widest uppercase">Code Hub</span>
+              </div>
             </div>
           </div>
 
