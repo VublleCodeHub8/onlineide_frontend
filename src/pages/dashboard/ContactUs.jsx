@@ -69,18 +69,20 @@ const ContactUs = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      {/* Enhanced Hero Section */}
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section */}
       <div className="bg-black py-16 relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:60px_60px]" />
-        <div className="container mx-auto px-6 relative">
-          <div className="text-center space-y-4">
-            <h1 className="text-5xl font-bold text-white tracking-tight">
-              Get in Touch
-            </h1>
-            <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-              Have questions about our services? We're here to help and answer any question you might have.
-            </p>
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-800 to-gray-900 opacity-80"></div>
+        <div className="absolute inset-0" style={{ 
+          backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 20%), radial-gradient(circle at 80% 30%, rgba(255, 255, 255, 0.08) 0%, transparent 20%)'
+        }}></div>
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="flex flex-col items-center">
+            <div className="inline-block w-16 h-16 p-3 rounded-full bg-white bg-opacity-10 mb-6 backdrop-blur-sm shadow-2xl">
+              <MessageSquare className="w-full h-full text-white" />
+            </div>
+            <h1 className="text-5xl font-bold text-white text-center mb-3 tracking-tight">Get in Touch</h1>
+            <p className="text-white opacity-80 max-w-xl text-center text-lg">Have questions about our services? We're here to help and answer any question you might have.</p>
           </div>
         </div>
       </div>
@@ -88,12 +90,13 @@ const ContactUs = () => {
       {/* Enhanced Contact Form Section */}
       <div className="container mx-auto px-6 py-16">
         <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 relative">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-1 bg-black rounded-full"></div>
             {/* Enhanced Contact Information */}
             <div className="space-y-8">
               <div className="space-y-6">
                 {/* Office Location */}
-                <div className="flex items-start space-x-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-start space-x-4 p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:translate-y-[-3px] border border-gray-100">
                   <div className="bg-black p-3 rounded-lg">
                     <MapPin className="h-6 w-6 text-white" />
                   </div>
@@ -108,7 +111,7 @@ const ContactUs = () => {
                 </div>
 
                 {/* Contact Info */}
-                <div className="flex items-start space-x-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-start space-x-4 p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:translate-y-[-3px] border border-gray-100">
                   <div className="bg-black p-3 rounded-lg">
                     <Mail className="h-6 w-6 text-white" />
                   </div>
@@ -124,7 +127,7 @@ const ContactUs = () => {
                 </div>
 
                 {/* Business Hours */}
-                <div className="flex items-start space-x-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-start space-x-4 p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:translate-y-[-3px] border border-gray-100">
                   <div className="bg-black p-3 rounded-lg">
                     <Clock className="h-6 w-6 text-white" />
                   </div>
@@ -140,7 +143,7 @@ const ContactUs = () => {
 
               {/* Social Links */}
               <div className="pt-6 border-t">
-                <h3 className="text-lg font-semibold mb-4">Connect With Us</h3>
+                <h3 className="text-lg font-semibold mb-4 pb-2 border-b-2 border-black inline-block">Connect With Us</h3>
                 <div className="flex space-x-4">
                   <a href="#" className="p-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors">
                     <Github className="h-5 w-5" />
@@ -159,16 +162,19 @@ const ContactUs = () => {
             </div>
 
             {/* Enhanced Contact Form */}
-            <div className="bg-white p-8 rounded-2xl shadow-lg transform hover:scale-[1.02] transition-all">
-              <div className="flex items-center gap-3 mb-8">
-                <MessageSquare className="h-6 w-6 text-black" />
-                <h2 className="text-2xl font-bold">Send us a Message</h2>
+            <div className="bg-white p-8 rounded-2xl shadow-lg transform hover:scale-[1.02] transition-all duration-300 hover:shadow-xl border border-gray-100">
+              <div className="flex items-center gap-3 mb-8 pb-3 border-b-2 border-gray-100">
+                <div className="bg-black rounded-full p-2">
+                  <MessageSquare className="h-5 w-5 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">Send us a Message</h2>
               </div>
               
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 gap-6">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="name" className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                      <span className="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>
                       Full Name
                     </label>
                     <input
@@ -179,14 +185,16 @@ const ContactUs = () => {
                       onChange={handleChange}
                       className="w-full px-4 py-3 rounded-lg border border-gray-300 
                                focus:ring-2 focus:ring-black focus:border-transparent
-                               transition-all duration-200"
+                               transition-all duration-300 hover:shadow-sm
+                               hover:border-gray-400"
                       placeholder="John Doe"
                       required
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="email" className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                      <span className="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>
                       Email Address
                     </label>
                     <input
@@ -197,14 +205,16 @@ const ContactUs = () => {
                       onChange={handleChange}
                       className="w-full px-4 py-3 rounded-lg border border-gray-300 
                                focus:ring-2 focus:ring-black focus:border-transparent
-                               transition-all duration-200"
+                               transition-all duration-300 hover:shadow-sm
+                               hover:border-gray-400"
                       placeholder="john@example.com"
                       required
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="subject" className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                      <span className="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>
                       Subject
                     </label>
                     <input
@@ -215,14 +225,16 @@ const ContactUs = () => {
                       onChange={handleChange}
                       className="w-full px-4 py-3 rounded-lg border border-gray-300 
                                focus:ring-2 focus:ring-black focus:border-transparent
-                               transition-all duration-200"
+                               transition-all duration-300 hover:shadow-sm
+                               hover:border-gray-400"
                       placeholder="How can we help?"
                       required
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="message" className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                      <span className="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>
                       Message
                     </label>
                     <textarea
@@ -244,8 +256,9 @@ const ContactUs = () => {
                   type="submit"
                   disabled={isLoading}
                   className="w-full flex items-center justify-center gap-2 bg-black text-white 
-                           py-3 px-6 rounded-lg hover:bg-gray-800 transition-all duration-200
-                           disabled:opacity-70 disabled:cursor-not-allowed text-lg font-medium"
+                            py-3 px-6 rounded-lg hover:bg-gray-800 transition-all duration-300
+                            disabled:opacity-70 disabled:cursor-not-allowed text-lg font-medium
+                            hover:shadow-lg hover:transform hover:translate-y-[-2px]"
                 >
                   {isLoading ? (
                     <>
