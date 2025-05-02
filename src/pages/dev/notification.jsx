@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from "react-redux";
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trash, Bell, Search, Power, Shield, Clock, Activity, MessageCircle, Eye } from "lucide-react";
+import { Trash, Bell, Search, Power, Shield, Clock, Activity, MessageCircle, Eye, Plus, X } from "lucide-react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import Popup from '@/components/Popup';
 
@@ -16,6 +16,11 @@ const Notifications = () => {
     const [popupMessage, setPopupMessage] = useState("");
     const [popupType, setPopupType] = useState("success");
     const [refreshTrigger, setRefreshTrigger] = useState(false);
+    const [showNotificationForm, setShowNotificationForm] = useState(false);
+    const [customNotification, setCustomNotification] = useState({
+        title: "",
+        message: ""
+    });
 
     useEffect(() => {
         const fetchNotifications = async () => {
@@ -91,6 +96,47 @@ const Notifications = () => {
             setPopupVisible(true);
         }
     };
+    
+    const handleSendCustomNotification = async () => {
+        if (!customNotification.title || !customNotification.message) {
+            setPopupMessage("Please provide both title and message");
+            setPopupType("error");
+            setPopupVisible(true);
+            return;
+        }
+        
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/dev/notification`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token.token}`,
+                },
+                body: JSON.stringify({
+                    title: customNotification.title,
+                    message: customNotification.message
+                }),
+            });
+            
+            if (response.ok) {
+                setPopupMessage("Notification sent successfully");
+                setPopupType("success");
+                setPopupVisible(true);
+                setCustomNotification({ title: "", message: "" });
+                setShowNotificationForm(false);
+                setRefreshTrigger(!refreshTrigger); // Refresh notification list
+            } else {
+                setPopupMessage("Failed to send notification");
+                setPopupType("error");
+                setPopupVisible(true);
+            }
+        } catch (error) {
+            console.error("Error sending notification:", error);
+            setPopupMessage("Error sending notification");
+            setPopupType("error");
+            setPopupVisible(true);
+        }
+    };
 
     const filteredNotifications = notifications.filter(notification =>
         notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -125,6 +171,15 @@ const Notifications = () => {
 
                         {/* Action Buttons */}
                         <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setShowNotificationForm(true)}
+                                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium
+                                         bg-black text-white rounded-lg hover:bg-gray-800 
+                                         transition-all duration-200 shadow-sm hover:shadow-md group"
+                            >
+                                <Plus className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                                Create Notification
+                            </button>
                             <Link
                                 to="/dev"
                                 className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium
@@ -137,7 +192,7 @@ const Notifications = () => {
                             <Link
                                 to="/auth"
                                 className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium
-                                         bg-black text-white rounded-lg hover:bg-gray-800 
+                                         bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 
                                          transition-all duration-200 shadow-sm hover:shadow group"
                             >
                                 <Power className="h-4 w-4 group-hover:scale-110 transition-transform" />
@@ -306,8 +361,81 @@ const Notifications = () => {
                         transform: translateY(0);
                     }
                 }
+                
+                .animate-fadeIn {
+                    animation: fadeIn 0.3s ease forwards;
+                }
             `}</style>
 
+            {/* Custom Notification Form Modal */}
+            {showNotificationForm && (
+                <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4 animate-fadeIn">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md transform transition-all duration-300 scale-100">
+                        <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-lg bg-black flex items-center justify-center">
+                                    <Bell className="h-5 w-5 text-white" />
+                                </div>
+                                <h3 className="text-xl font-semibold text-gray-900">Create Notification</h3>
+                            </div>
+                            <button
+                                onClick={() => setShowNotificationForm(false)}
+                                className="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200"
+                            >
+                                <X className="h-5 w-5 text-gray-500" />
+                            </button>
+                        </div>
+                        
+                        <div className="p-6">
+                            <div className="space-y-4">
+                                <div>
+                                    <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                                        Notification Title
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="title"
+                                        value={customNotification.title}
+                                        onChange={(e) => setCustomNotification({...customNotification, title: e.target.value})}
+                                        className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200"
+                                        placeholder="Enter notification title"
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+                                        Notification Message
+                                    </label>
+                                    <textarea
+                                        id="message"
+                                        value={customNotification.message}
+                                        onChange={(e) => setCustomNotification({...customNotification, message: e.target.value})}
+                                        rows="4"
+                                        className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200"
+                                        placeholder="Enter notification message"
+                                    ></textarea>
+                                </div>
+                            </div>
+                            
+                            <div className="mt-6 flex justify-end gap-3">
+                                <button
+                                    onClick={() => setShowNotificationForm(false)}
+                                    className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSendCustomNotification}
+                                    className="px-4 py-2.5 text-sm font-medium text-white bg-black hover:bg-gray-800 rounded-lg transition-colors duration-200 shadow-sm hover:shadow transform hover:translateY(-1px)"
+                                >
+                                    Send Notification
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
             <Popup
                 visible={popupVisible}
                 message={popupMessage}
