@@ -12,7 +12,8 @@ import {
     FaBug,
     FaSignOutAlt,
     FaChevronLeft,
-    FaChevronRight
+    FaChevronRight,
+    FaBook
 } from "react-icons/fa";
 import { Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -74,6 +75,12 @@ function Sidebar({ isOpen }) {
             path: "/public",
             name: "Public",
             icon: <Globe/>,
+            showFor: ['admin', 'dev', 'user']
+        },
+        {
+            path: "/documentation",
+            name: "Documentation",
+            icon: <FaBook/>,
             showFor: ['admin', 'dev', 'user']
         },
         {

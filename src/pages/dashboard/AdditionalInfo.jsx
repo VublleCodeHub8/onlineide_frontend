@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-
-import { MapPin, Briefcase, Github, Twitter, Linkedin, Globe, Send, HelpCircle, CheckCircle } from 'lucide-react';
+import { MapPin, Briefcase, Github, Twitter, Linkedin, Globe, Send, HelpCircle, CheckCircle, User, Link } from 'lucide-react';
 import Popup from '@/components/Popup';
 const AdditionalInfo = () => {
   const token = useSelector((state) => state.misc.token);
@@ -85,30 +84,35 @@ const AdditionalInfo = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-gray-900 to-black py-16">
-        <div className="container mx-auto px-6">
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <div className="h-16 w-16 rounded-xl bg-white/10 flex items-center justify-center">
-              <HelpCircle className="h-8 w-8 text-white" />
+      <div className="bg-black py-16 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-800 to-gray-900 opacity-80"></div>
+        <div className="absolute inset-0" style={{ 
+          backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 20%), radial-gradient(circle at 80% 30%, rgba(255, 255, 255, 0.08) 0%, transparent 20%)'
+        }}></div>
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="flex flex-col items-center">
+            <div className="inline-block w-16 h-16 p-3 rounded-full bg-white bg-opacity-10 mb-6 backdrop-blur-sm shadow-2xl">
+              <User className="h-full w-full text-white" />
             </div>
+            <h1 className="text-5xl font-bold text-white text-center mb-3 tracking-tight">Additional Information</h1>
+            <p className="text-white opacity-80 max-w-xl text-center text-lg">
+              Complete your profile by adding additional information and social links.
+            </p>
           </div>
-          <h1 className="text-4xl font-bold text-white text-center">Additional Information</h1>
-          <p className="text-gray-300 text-center mt-4 max-w-xl mx-auto">
-            Complete your profile by adding additional information and social links.
-          </p>
         </div>
       </div>
 
       {/* Form Section */}
-      <div className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-6 py-16">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-xl shadow-lg p-8 transform transition-all duration-300 hover:shadow-xl">
+          <div className="bg-white rounded-lg shadow-xl p-8 border border-gray-200 transform transition-all duration-300 hover:shadow-2xl">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Location Field */}
               <div className="space-y-2">
                 <label htmlFor="location" className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-black rounded-full"></span>
                   <MapPin className="h-4 w-4" />
                   Location
                 </label>
@@ -118,8 +122,8 @@ const AdditionalInfo = () => {
                   name="location"
                   value={formData.location}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent
-                           transition duration-200 bg-gray-50 hover:bg-white"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent
+                           transition-all duration-300 bg-gray-50 hover:bg-white transform hover:shadow-md"
                   placeholder="Enter your location"
                 />
               </div>
@@ -127,6 +131,7 @@ const AdditionalInfo = () => {
               {/* Occupation Field */}
               <div className="space-y-2">
                 <label htmlFor="occupation" className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-black rounded-full"></span>
                   <Briefcase className="h-4 w-4" />
                   Occupation
                 </label>
@@ -136,86 +141,110 @@ const AdditionalInfo = () => {
                   name="occupation"
                   value={formData.occupation}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent
-                           transition duration-200 bg-gray-50 hover:bg-white"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent
+                           transition-all duration-300 bg-gray-50 hover:bg-white transform hover:shadow-md"
                   placeholder="Enter your occupation"
                 />
               </div>
 
               {/* Social Links Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Social Links</h3>
+                <h3 className="text-xl font-bold mb-4 text-black border-b border-gray-200 pb-2 inline-block">Social Links</h3>
                 
                 {/* GitHub */}
                 <div className="space-y-2">
                   <label htmlFor="social-github" className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-black rounded-full"></span>
                     <Github className="h-4 w-4" />
                     GitHub Profile
                   </label>
-                  <input
-                    type="url"
-                    id="social-github"
-                    name="social-github"
-                    value={formData.socialLinks.github}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent
-                             transition duration-200 bg-gray-50 hover:bg-white"
-                    placeholder="https://github.com/username"
-                  />
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Link className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <input
+                      type="url"
+                      id="social-github"
+                      name="social-github"
+                      value={formData.socialLinks.github}
+                      onChange={handleChange}
+                      className="w-full pl-10 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent
+                              transition-all duration-300 bg-gray-50 hover:bg-white transform hover:shadow-md"
+                      placeholder="https://github.com/username"
+                    />
+                  </div>
                 </div>
 
                 {/* Twitter */}
                 <div className="space-y-2">
                   <label htmlFor="social-twitter" className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-black rounded-full"></span>
                     <Twitter className="h-4 w-4" />
                     Twitter Profile
                   </label>
-                  <input
-                    type="url"
-                    id="social-twitter"
-                    name="social-twitter"
-                    value={formData.socialLinks.twitter}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent
-                             transition duration-200 bg-gray-50 hover:bg-white"
-                    placeholder="https://twitter.com/username"
-                  />
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Link className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <input
+                      type="url"
+                      id="social-twitter"
+                      name="social-twitter"
+                      value={formData.socialLinks.twitter}
+                      onChange={handleChange}
+                      className="w-full pl-10 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent
+                              transition-all duration-300 bg-gray-50 hover:bg-white transform hover:shadow-md"
+                      placeholder="https://twitter.com/username"
+                    />
+                  </div>
                 </div>
 
                 {/* LinkedIn */}
                 <div className="space-y-2">
                   <label htmlFor="social-linkedin" className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-black rounded-full"></span>
                     <Linkedin className="h-4 w-4" />
                     LinkedIn Profile
                   </label>
-                  <input
-                    type="url"
-                    id="social-linkedin"
-                    name="social-linkedin"
-                    value={formData.socialLinks.linkedin}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent
-                             transition duration-200 bg-gray-50 hover:bg-white"
-                    placeholder="https://linkedin.com/in/username"
-                  />
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Link className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <input
+                      type="url"
+                      id="social-linkedin"
+                      name="social-linkedin"
+                      value={formData.socialLinks.linkedin}
+                      onChange={handleChange}
+                      className="w-full pl-10 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent
+                              transition-all duration-300 bg-gray-50 hover:bg-white transform hover:shadow-md"
+                      placeholder="https://linkedin.com/in/username"
+                    />
+                  </div>
                 </div>
 
                 {/* Personal Website */}
                 <div className="space-y-2">
                   <label htmlFor="social-website" className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-black rounded-full"></span>
                     <Globe className="h-4 w-4" />
                     Personal Website
                   </label>
-                  <input
-                    type="url"
-                    id="social-website"
-                    name="social-website"
-                    value={formData.socialLinks.website}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent
-                             transition duration-200 bg-gray-50 hover:bg-white"
-                    placeholder="https://your-website.com"
-                  />
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Link className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <input
+                      type="url"
+                      id="social-website"
+                      name="social-website"
+                      value={formData.socialLinks.website}
+                      onChange={handleChange}
+                      className="w-full pl-10 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent
+                              transition-all duration-300 bg-gray-50 hover:bg-white transform hover:shadow-md"
+                      placeholder="https://your-website.com"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -223,9 +252,9 @@ const AdditionalInfo = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full bg-black text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2
+                className={`w-full bg-black text-white py-3.5 rounded-lg font-medium flex items-center justify-center gap-2
                   ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-800'} 
-                  transition duration-200 shadow-sm hover:shadow`}
+                  transition duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-0.5`}
               >
                 {isSubmitting ? (
                   <span className="flex items-center justify-center gap-2">
@@ -245,22 +274,24 @@ const AdditionalInfo = () => {
             </form>
 
             {/* Guidelines */}
-            <div className="mt-8 p-6 bg-gray-50 rounded-xl border border-gray-100">
-              <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                <HelpCircle className="h-4 w-4" />
-                Tips for your profile:
+            <div className="mt-10 p-8 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg shadow-inner border border-gray-300 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-black"></div>
+              <h3 className="text-base font-bold text-black mb-5 pl-4 border-l-4 border-black">
+                Tips for Your Profile
               </h3>
-              <ul className="text-sm text-gray-600 space-y-3">
+              <ul className="space-y-4 ml-2">
                 {[
-                  'Add your current location to help with networking',
-                  'Include your current occupation or role',
-                  'Link your professional social profiles',
-                  'Make sure all URLs are complete and valid',
-                  'Keep your information up to date'
+                  { text: 'Add your current location to help with networking', icon: <MapPin className="h-5 w-5" /> },
+                  { text: 'Include your current occupation or role', icon: <Briefcase className="h-5 w-5" /> },
+                  { text: 'Link your professional social profiles', icon: <Link className="h-5 w-5" /> },
+                  { text: 'Make sure all URLs are complete and valid', icon: <Globe className="h-5 w-5" /> },
+                  { text: 'Keep your information up to date', icon: <CheckCircle className="h-5 w-5" /> }
                 ].map((item, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>{item}</span>
+                  <li key={index} className="flex items-start p-3 bg-white rounded-lg shadow-sm transform hover:-translate-y-1 transition-transform duration-300">
+                    <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center mr-3 flex-shrink-0">
+                      {item.icon}
+                    </div>
+                    <span className="text-gray-700">{item.text}</span>
                   </li>
                 ))}
               </ul>
