@@ -29,6 +29,7 @@ export default function Project() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingPublishStatus, setIsCheckingPublishStatus] = useState(true);
   const [isDeletingPublic, setIsDeletingPublic] = useState(false);
+  const [errorType, setErrorType] = useState(null); // Track specific error types
   
   const params = useParams();
   const token = useSelector((state) => state.misc.token);
@@ -123,6 +124,12 @@ export default function Project() {
           dispatch(projectAction.setPort(data.port));
         });
       } else {
+        // Handle specific error types
+        if (res.status === 403) {
+          const errorData = await res.json();
+          setErrorType('unauthorized');
+          console.error("Authorization error:", errorData.error);
+        }
         setSoc(false);
       }
     }
@@ -338,8 +345,18 @@ export default function Project() {
               </svg>
             </div>
             <div className="space-y-2 text-center">
-              <p className="text-xl text-gray-200 font-medium">Error Fetching Project</p>
-              <p className="text-gray-400">"{params.projectId}" could not be loaded</p>
+              {errorType === 'unauthorized' ? (
+                <>
+                  <p className="text-xl text-gray-200 font-medium">Access Denied</p>
+                  <p className="text-gray-400">You don't have permission to access this container</p>
+                  <p className="text-sm text-gray-500 mt-1">This container may belong to another user</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-xl text-gray-200 font-medium">Error Fetching Project</p>
+                  <p className="text-gray-400">"{params.projectId}" could not be loaded</p>
+                </>
+              )}
               <Link 
                 to="/"
                 className="inline-block mt-4 px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-200 text-sm font-medium transition-colors"
