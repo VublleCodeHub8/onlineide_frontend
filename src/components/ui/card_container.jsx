@@ -25,10 +25,21 @@ const getContainerStatus = async (containerId, token) => {
       throw new Error("Failed to fetch container status");
     }
     const details = await response.json();
-    return {status: details.status, cpu: details.cpuUsagePercentage, memory: details.memoryUsagePercentage};
+    console.log("Container details:", details);
+    return {
+      status: details.status, 
+      cpu: details.cpuUsagePercentage, 
+      memory: details.memoryUsagePercentage,
+      uptime: details.containerUptime || details.Uptime || "0"
+    };
   } catch (error) {
     console.error("Error fetching container status:", error);
-    return {status: "unknown", cpu: 0, memory: 0};
+    return {
+      status: "unknown", 
+      cpu: 0, 
+      memory: 0,
+      uptime: "0"
+    };
   }
 };
 
@@ -90,6 +101,7 @@ export const HoverEffect = ({
           Status: details.status,
           CPU: details.cpu,
           Memory: details.memory,
+          Uptime: details.uptime,
           Template: templateNameResponse.templateName,
         };
       }));
@@ -468,7 +480,7 @@ export const HoverEffect = ({
                   {loadingStates[item.id] && (
                     <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center rounded-xl z-10">
                       <div className="flex flex-col items-center">
-                        <FaSpinner className="animate-spin text-blue-500 w-8 h-8 mb-2" />
+                        <FaSpinner className="animate-spin text-black w-8 h-8 mb-2" />
                         <span className="text-sm font-medium text-gray-700">Processing...</span>
                       </div>
                     </div>
@@ -476,7 +488,40 @@ export const HoverEffect = ({
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
                       <CardTitle className="text-lg mb-2">{item.title}</CardTitle>
-                      <LastUsed date={item.lastUsed} />
+                      
+                      {/* Container info section with consistent styling */}
+                      <div className="space-y-2 mb-3">
+                        <LastUsed
+                          className="flex items-center text-xs text-gray-600"
+                          date={item.lastUsed}
+                        />
+                        
+                        {console.log("Uptime value:", item.Uptime)}
+                        <UptimeDisplay 
+                          className="flex items-center text-xs text-gray-600"
+                          uptime={item.Uptime}
+                        />
+                        
+                        <div className="flex items-center text-xs text-gray-600">
+                          <svg 
+                            className="h-3 w-3 text-black mr-1" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round" 
+                              strokeWidth="2" 
+                              d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
+                            />
+                          </svg>
+                          <span>Template: <span className="font-medium text-black">{item.Template}</span></span>
+                        </div>
+                      </div>
+                      
+                      {/* Removing the old template display */}
+                      {/*
                       {(
                         <div className="mt-2 flex items-center text-sm text-gray-500">
                           <svg 
@@ -495,6 +540,7 @@ export const HoverEffect = ({
                           <span>Template: {item.Template}</span>
                         </div>
                       )}
+                      */}
                     </div>
 
                     <div className="flex items-center space-x-8">
@@ -729,9 +775,9 @@ const EditContainerForm = ({ item, onSave, onCancel, isLoading }) => {
       className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 relative"
     >
       {isLoading && (
-        <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center rounded-xl z-10">
+        <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-10">
           <div className="flex flex-col items-center">
-            <FaSpinner className="animate-spin text-blue-500 w-8 h-8 mb-2" />
+            <FaSpinner className="animate-spin text-black w-8 h-8 mb-2" />
             <span className="text-sm font-medium text-gray-700">Saving changes...</span>
           </div>
         </div>
@@ -816,7 +862,7 @@ const EditContainerForm = ({ item, onSave, onCancel, isLoading }) => {
           disabled={isLoading}
         >
           {isLoading ? (
-            <FaSpinner className="animate-spin w-4 h-4 mr-2" />
+            <FaSpinner className="animate-spin mr-2 -ml-1 h-4 w-4" />
           ) : (
             <FiSave className="w-4 h-4" />
           )}
@@ -839,37 +885,75 @@ const EditContainerForm = ({ item, onSave, onCancel, isLoading }) => {
 // Add this new component for LastUsed
 const LastUsed = ({ className, date }) => {
   const formatDate = (dateString) => {
-    if (!dateString) return 'Never used';
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    }).format(date);
+    if (!dateString) return "Never";
+    
+    const now = new Date();
+    const lastUsedDate = new Date(dateString);
+    const diffInDays = Math.floor((now - lastUsedDate) / (1000 * 60 * 60 * 24));
+    const diffInHours = Math.floor((now - lastUsedDate) / (1000 * 60 * 60));
+    const diffInMinutes = Math.floor((now - lastUsedDate) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return "Just now";
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInDays < 30) return `${diffInDays}d ago`;
+    
+    return lastUsedDate.toLocaleDateString();
   };
 
   return (
-    <div className={cn(
-      "flex items-center text-sm text-gray-500",
-      className
-    )}>
-      <svg 
-        className="w-4 h-4 mr-1.5 text-gray-400" 
-        fill="none" 
-        stroke="currentColor" 
-        viewBox="0 0 24 24"
-      >
-        <path 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-          strokeWidth="2" 
-          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+    <div className={cn("flex items-center space-x-1", className)}>
+      <svg className="h-3 w-3 text-black" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" 
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" 
+          clipRule="evenodd" 
         />
       </svg>
-      {formatDate(date)}
+      <span>Last used: <span className="font-medium text-black">{formatDate(date)}</span></span>
+    </div>
+  );
+};
+
+// Add this new component for displaying uptime
+const UptimeDisplay = ({ className, uptime }) => {
+  console.log("Rendering UptimeDisplay with uptime:", uptime);
+  
+  const formatUptime = (uptimeValue) => {
+    // Check for pre-formatted strings
+    if (typeof uptimeValue === 'string' && 
+        (uptimeValue.includes('d') || uptimeValue.includes('h') || uptimeValue.includes('m'))) {
+      return uptimeValue;
+    }
+    
+    // Handle empty or zero values
+    if (!uptimeValue || uptimeValue === "0") return "Not running";
+    
+    try {
+      // Convert to number if it's a string containing seconds
+      const seconds = typeof uptimeValue === 'string' ? parseInt(uptimeValue, 10) : uptimeValue;
+      
+      if (isNaN(seconds)) return "Unknown";
+      
+      const days = Math.floor(seconds / (3600 * 24));
+      const hours = Math.floor((seconds % (3600 * 24)) / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      
+      let result = [];
+      if (days > 0) result.push(`${days}d`);
+      if (hours > 0) result.push(`${hours}h`);
+      if (minutes > 0 || (days === 0 && hours === 0)) result.push(`${minutes}m`);
+      
+      return result.join(' ');
+    } catch (error) {
+      console.error("Error formatting uptime:", error);
+      return "Unknown";
+    }
+  };
+
+  return (
+    <div className={cn("flex items-center space-x-1", className)}>
+      <FiRefreshCw className="h-3 w-3 text-black" />
+      <span>Uptime: <span className="font-medium text-black">{formatUptime(uptime)}</span></span>
     </div>
   );
 };
@@ -893,7 +977,7 @@ const ConfirmationDialog = ({ isOpen, onClose, onConfirm, containerName, isLoadi
           {isLoading && (
             <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-10">
               <div className="flex flex-col items-center">
-                <FaSpinner className="animate-spin text-blue-500 w-8 h-8 mb-2" />
+                <FaSpinner className="animate-spin text-black w-8 h-8 mb-2" />
                 <span className="text-sm font-medium text-gray-700">Deleting container...</span>
               </div>
             </div>

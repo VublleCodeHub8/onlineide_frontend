@@ -92,9 +92,32 @@ function Containers() {
                 <div 
                   className="h-full bg-green-500 rounded-full transition-all duration-500"
                   style={{ 
-                    width: `${(stats.runningContainers / Math.max(stats.totalContainers, 1)) * 100}%` 
+                    width: `${(stats.runningContainers / Math.max(stats.totalContainers, 1)) * 100}%`,
+                    minWidth: stats.runningContainers > 0 ? '5%' : '0%'
                   }}
                 />
+              </div>
+              
+              {/* Added stat trend */}
+              <div className="flex items-center gap-2 text-xs text-gray-500 mt-2">
+                <div className="flex items-center gap-1">
+                  <svg 
+                    className="w-3 h-3 text-green-500" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth="2" 
+                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" 
+                    />
+                  </svg>
+                  <span>Active</span>
+                </div>
+                <div className="w-1 h-1 rounded-full bg-gray-300"></div>
+                <div>Updated just now</div>
               </div>
             </div>
           </div>
@@ -128,6 +151,18 @@ function Containers() {
                   </div>
                 </div>
               </div>
+              
+              {/* Container type distribution */}
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <div className="bg-gray-50 p-2 rounded-lg border-l-2 border-green-500">
+                  <p className="text-xs text-gray-500">Running</p>
+                  <p className="text-sm font-medium text-gray-700">{stats.runningContainers}</p>
+                </div>
+                <div className="bg-gray-50 p-2 rounded-lg border-l-2 border-gray-300">
+                  <p className="text-xs text-gray-500">Stopped</p>
+                  <p className="text-sm font-medium text-gray-700">{stats.totalContainers - stats.runningContainers}</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -154,17 +189,17 @@ function Containers() {
               
               {/* Status Indicators */}
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-600">Docker Service</span>
-                  <span className="text-green-600 font-medium">Active</span>
+                <div className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
+                  <span className="text-xs text-gray-600">Docker Service</span>
+                  <span className="text-xs text-green-600 font-medium">Active</span>
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-600">API Connection</span>
-                  <span className="text-green-600 font-medium">Connected</span>
+                <div className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
+                  <span className="text-xs text-gray-600">API Connection</span>
+                  <span className="text-xs text-green-600 font-medium">Connected</span>
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-600">Network Status</span>
-                  <span className="text-green-600 font-medium">Online</span>
+                <div className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
+                  <span className="text-xs text-gray-600">Network Status</span>
+                  <span className="text-xs text-green-600 font-medium">Online</span>
                 </div>
               </div>
             </div>
