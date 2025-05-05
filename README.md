@@ -88,12 +88,20 @@
 ### Prerequisites
 - Node.js (v18+ recommended)
 - npm or yarn
+- or Docker (through docker image)
 
 ### Installation
 ```bash
 # Clone the repository
 git clone <repo-url>
 cd Online_frontend
+
+# Run From Docker image
+run:
+```bash
+docker-compose up -d
+```
+##OR
 
 # Install dependencies
 npm install
