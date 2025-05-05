@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  terminas-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL='http://157.245.101.60/api'
+      - VITE_API_URL_SOCKET='http://157.245.101.60'
