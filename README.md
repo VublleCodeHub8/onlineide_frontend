@@ -155,10 +155,6 @@ Please read the [contributing guidelines](CONTRIBUTING.md) for more details.
 
 ---
 
-## 👨‍💻 Authors & Credits
-- Himanshu Saraswat ([himanshu.s22@iiits.in](mailto:himanshu.s22@iiits.in)) – Full Stack Developer
-- Adarsh Singh ([adarsh.s22@iiits.in](mailto:adarsh.s22@iiits.in)) – Full Stack Developer
-
 Special thanks to the open-source community and all contributors.
 
 ---
@@ -201,12 +197,6 @@ npm run lint
 ## 📚 Documentation & Help
 - **User Guide**: Visit the in-app Documentation section for detailed usage instructions.
 - **Contact**: Use the Contact Us page or email the team at cloudeide@development.in
-
-## 👨‍💻 Authors & Credits
-- Himanshu Saraswat ([himanshu.s22@iiits.in](mailto:himanshu.s22@iiits.in)) – Full Stack Developer
-- Adarsh Singh ([adarsh.s22@iiits.in](mailto:adarsh.s22@iiits.in)) – Full Stack Developer
-
-Special thanks to the open-source community and all contributors.
 
 ---
 
