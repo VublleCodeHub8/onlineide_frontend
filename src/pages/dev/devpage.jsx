@@ -15,11 +15,11 @@ const DevPage = () => {
   const dispatch = useDispatch();
   const [templates, setTemplates] = useState([]);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState(""); // Add search term state
+  const [searchTerm, setSearchTerm] = useState(""); 
   const token = useSelector((state) => state.misc.token);
   const [popupVisible, setPopupVisible] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
-  const [popupType, setPopupType] = useState("success"); // 'success' or 'error'
+  const [popupType, setPopupType] = useState("success"); 
   const { user, status, isEditMode } = useSelector((state) => state.user);
 
 
@@ -40,7 +40,6 @@ const DevPage = () => {
           const uses = containerData.filter((container) => container.template === template.image).length;
           return { ...template, uses };
         })
-        // console.log(combinedData);
         setTemplates(combinedData);
       } catch (err) {
         setError(err.message);
@@ -52,7 +51,12 @@ const DevPage = () => {
 
   const fetchTemplate = async () => {
     try {
-      const endpoint = `${import.meta.env.VITE_API_URL}/dev/getUserTemplates/${token.email}`;
+      // Determine endpoint based on user role
+      const baseUrl = import.meta.env.VITE_API_URL;
+      const endpoint = token.role === "admin" 
+        ? `${baseUrl}/dev/getAllTemplates` 
+        : `${baseUrl}/dev/getUserTemplates/${token.email}`;
+      
       const response = await fetch(endpoint, {
         method: "GET",
         headers: {

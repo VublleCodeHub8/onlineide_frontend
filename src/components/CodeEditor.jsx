@@ -124,6 +124,11 @@ const codeSnippets = {
             description: "C++ class template",
             code: "class ClassName {\nprivate:\n\t// private members\n\n\npublic:\n\t// Constructor\n\tClassName() {\n\t\t// initialization\n\t}\n\n\t// Methods\n\tvoid method() {\n\t\t// method implementation\n\t}\n};"
         },
+        {
+            name: "Competitive Programming",
+            description: "C++ competitive programming template with common utilities",
+            code: "#include <bits/stdc++.h>\n\n// अहं कृत्स्नस्य जगतः प्रभवः प्रलयस्तथा ।।6।।\n\nusing namespace std;\n\n#define IOS                       \\\n    ios_base::sync_with_stdio(0); \\\n    cin.tie(0);                   \\\n    cout.tie(0);\n#define endl \"\\n\"\n#define int long long\ntypedef unsigned long long ll;\ntypedef pair<int, int> pii;\ntypedef pair<ll, ll> pll;\ntypedef pair<string, string> pss;\ntypedef vector<pair<int, int>> vpii;\ntypedef vector<pair<ll, ll>> vpll;\ntypedef vector<int> vi;\ntypedef vector<vi> vvi;\ntypedef vector<pii> vii;\ntypedef vector<ll> vl;\ntypedef vector<vl> vvl;\n#define fi first\n#define se second\n#define all(arr) arr.begin(), arr.end()\n#define MP make_pair\n#define pb push_back\n#define repeat(i, st, n) for (int i = st; i < n; i++)\nconst int mod = 1e9 + 7;\nmt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());\nvoid print(vi &v)\n{\n    for (auto it : v)\n        cout << it << \" \";\n    cout << endl;\n}\nvoid solve()\n{\n}\n\nsigned main()\n{\n    IOS\n\n#ifndef ONLINE_JUDGE\n        freopen(\"input.txt\", \"r\", stdin);\n    freopen(\"output.txt\", \"w\", stdout);\n#endif\n\n    int t = 1;\n    cin >> t;\n    while (t--)\n    {\n        solve();\n    }\n    return 0;\n}"
+        },
     ],
     html: [
         {
