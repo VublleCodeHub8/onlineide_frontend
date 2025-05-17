@@ -1510,7 +1510,7 @@ const ContainerRow = ({ setPopupVisible, popupMessage, popupType, popupVisible, 
         <div className="h-8 w-8 rounded-lg bg-gray-200/70 flex items-center justify-center">
           <Box className="h-4 w-4 text-gray-600" />
         </div>
-        <Link to={`${import.meta.env.VITE_API_URL_WEB}/project/${container.id}`} className="hover:bg-gray-100 rounded p-1 transition-colors duration-200">
+        <Link to={`${import.meta.env.VITE_API_URL_WEB}/project/${container.id}`} target="_blank" rel="noopener noreferrer" className="hover:bg-gray-100 rounded p-1 transition-colors duration-200">
           <span className="font-medium text-gray-900">{container.name}</span>
           <p className="text-xs text-gray-500 mt-0.5">ID: {container.id.slice(0, 12)}</p>
           <div className="flex items-center gap-1 mt-1 text-xs text-black">
