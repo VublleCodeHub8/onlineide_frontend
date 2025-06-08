@@ -6,10 +6,15 @@ import { Link, useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
 import { projectAction } from "@/store/main";
-import { ArrowLeft, HelpCircle, X, Send } from "lucide-react";
+import { ArrowLeft, HelpCircle, X, Send, MessageSquare } from "lucide-react"; // Added MessageSquare
 import { FaChevronRight } from "react-icons/fa";
 
 export default function Project() {
+  const [showAiHelp, setShowAiHelp] = useState(false);
+  const [aiQuery, setAiQuery] = useState("");
+  const [aiResponse, setAiResponse] = useState("");
+  const [isAiConnecting, setIsAiConnecting] = useState(false);
+  const [aiError, setAiError] = useState("");
   const [soc, setSoc] = useState(null);
   const [showHelp, setShowHelp] = useState(false);
   const [showPublishForm, setShowPublishForm] = useState(false);
@@ -27,6 +32,7 @@ export default function Project() {
     description: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const port = useSelector((state) => state.project.port);
   const [isCheckingPublishStatus, setIsCheckingPublishStatus] = useState(true);
   const [isDeletingPublic, setIsDeletingPublic] = useState(false);
   const [errorType, setErrorType] = useState(null); // Track specific error types
@@ -285,6 +291,66 @@ export default function Project() {
     }
   };
 
+  const handleSendAiQuery = async () => {
+    if (!aiQuery.trim()) return;
+    setAiError("");
+    setAiResponse("");
+    setIsAiConnecting(true);
+
+    const agentPort = port; 
+
+    if (!agentPort) {
+      console.error("Agent port is not available.");
+      setAiError("AI service configuration error: Port not found.");
+      setIsAiConnecting(false);
+      return;
+    }
+
+    const agentUrl = `${import.meta.env.VITE_API_URL_SOCKET}:${agentPort}/agent/query`;
+    console.log(`Sending query to AI Agent at: ${agentUrl}`);
+
+    try {
+      const response = await fetch(agentUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ initialUserQuery: aiQuery }),
+      });
+
+      const responseBody = await response.text();
+
+      if (!response.ok) {
+        console.error("AI Agent request failed:", response.status, responseBody);
+        let errorDetail = responseBody;
+        try {
+            const errorJson = JSON.parse(responseBody);
+            errorDetail = typeof errorJson === 'object' ? JSON.stringify(errorJson, null, 2) : errorJson.toString();
+        } catch (e) {
+            errorDetail = responseBody || response.statusText;
+        }
+        setAiError(`Error ${response.status}: ${errorDetail}`);
+        return;
+      }
+
+      let data;
+      try {
+        data = JSON.parse(responseBody);
+      } catch (e) {
+        data = responseBody;
+      }
+      
+      console.log("AI Agent Response:", data);
+      setAiResponse(typeof data === 'object' ? JSON.stringify(data, null, 2) : data.toString());
+      setAiQuery(""); // Clear input after sending
+    } catch (error) {
+      console.error("AI Agent communication error:", error);
+      setAiError(`Communication error: ${error.message}. Please check console for details.`);
+    } finally {
+      setIsAiConnecting(false);
+    }
+  };
+
   const togglePrivacy = async () => {
     const containerId = params.projectId;
     if (!containerId || !isPublished) return;
@@ -437,6 +503,14 @@ export default function Project() {
                 <span>Publish</span>
               </button>
             )}
+            {/* AI Help Button */}
+            <button
+              onClick={() => setShowAiHelp(true)}
+              title="AI Assistant"
+              className="p-2 rounded-md bg-blue-600 hover:bg-blue-500 text-white transition-colors duration-150 ease-in-out flex items-center justify-center shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            >
+              <MessageSquare size={18} />
+            </button>
             <Link 
               to="/" 
               className="group flex items-center gap-2 px-4 py-2 rounded-lg
@@ -593,6 +667,71 @@ export default function Project() {
             </div>
           )}
         </>
+      )}
+
+      {/* AI Help Modal */}
+      {showAiHelp && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-800 p-6 rounded-xl border border-zinc-700 shadow-2xl w-full max-w-lg relative transform transition-all duration-300 ease-out scale-100">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-xl font-semibold text-blue-400 flex items-center">
+                <MessageSquare size={22} className="mr-2" /> AI Assistant
+              </h4>
+              <button 
+                onClick={() => {
+                  setShowAiHelp(false);
+                  setAiResponse(""); 
+                  setAiError(""); 
+                }}
+                className="text-zinc-400 hover:text-zinc-200 transition-colors p-1 rounded-full hover:bg-zinc-700"
+                title="Close"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <textarea
+              name="initialUserQuery"
+              value={aiQuery}
+              onChange={(e) => setAiQuery(e.target.value)}
+              placeholder="Describe your problem or ask a question..."
+              className="w-full p-3 rounded-lg bg-zinc-700 border border-zinc-600 text-zinc-100 h-36 resize-none mb-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
+              rows={5}
+            />
+            
+            <button
+              onClick={handleSendAiQuery}
+              disabled={isAiConnecting || !aiQuery.trim()}
+              className={`w-full px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium transition-all duration-150 ease-in-out flex items-center justify-center shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed transform hover:-translate-y-0.5 disabled:transform-none`}
+            >
+              {isAiConnecting ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/50 border-t-white mr-2"></div>
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <Send size={18} className="mr-2" />
+                  Send Query
+                </>
+              )}
+            </button>
+
+            {aiError && (
+              <div className="mt-4 p-3 bg-red-700/30 border border-red-600 rounded-md text-red-300 text-sm">
+                <p className="font-semibold">Error:</p>
+                <p>{aiError}</p>
+              </div>
+            )}
+
+            {aiResponse && (
+              <div className="mt-4 p-3 bg-zinc-700/50 border border-zinc-600 rounded-md text-zinc-200 text-sm max-h-60 overflow-y-auto">
+                <p className="font-semibold mb-1 text-blue-300">AI Response:</p>
+                <pre className="whitespace-pre-wrap text-xs">{aiResponse}</pre>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
